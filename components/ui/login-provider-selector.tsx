@@ -3,6 +3,7 @@
 import { RadioGroup } from "@headlessui/react";
 import { useState } from "react";
 
+import { cn } from "@/lib/utils";
 import type { OAuthProvider } from "@/lib/auth/routes";
 
 export type ProviderOption = {
@@ -23,27 +24,38 @@ export function LoginProviderSelector({ providers, onSelect }: LoginProviderSele
   return (
     <RadioGroup
       value={selected}
+      aria-label="OAuth 제공자 선택"
       onChange={(value) => {
         setSelected(value);
         onSelect(value);
       }}
-      className="provider-selector"
+      className="flex flex-col gap-4"
     >
       {providers.map((provider) => (
-        <RadioGroup.Option key={provider.id} value={provider}>
+        <RadioGroup.Option
+          key={provider.id}
+          value={provider}
+          className={({ checked }) =>
+            cn(
+              "rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-2 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950",
+              checked && "border-sky-300 bg-slate-900"
+            )
+          }
+        >
           {({ checked }) => (
-            <div
-              style={{
-                border: checked ? "2px solid #22d3ee" : "1px solid rgba(255,255,255,0.2)",
-                borderRadius: "12px",
-                padding: "1rem",
-                marginBottom: "0.75rem",
-                cursor: "pointer",
-                background: checked ? "rgba(34, 211, 238, 0.12)" : "rgba(15,23,42,0.7)"
-              }}
-            >
-              <div style={{ fontWeight: 600 }}>{provider.label}</div>
-              <p style={{ fontSize: "0.875rem", margin: "0.25rem 0 0" }}>{provider.description}</p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <p className="text-base font-semibold text-slate-100">{provider.label}</p>
+                <span
+                  className={cn(
+                    "text-xs font-medium uppercase tracking-wide text-slate-500",
+                    checked && "text-sky-300"
+                  )}
+                >
+                  {checked ? "선택됨" : "선택"}
+                </span>
+              </div>
+              <p className="text-sm text-slate-400">{provider.description}</p>
             </div>
           )}
         </RadioGroup.Option>

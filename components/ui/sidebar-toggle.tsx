@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useUiStore } from "@/store/ui/uiStore";
 
 export function SidebarToggle() {
@@ -7,20 +8,16 @@ export function SidebarToggle() {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="sm"
+      aria-pressed={isSidebarOpen}
+      aria-label={isSidebarOpen ? "사이드바 숨기기" : "사이드바 보이기"}
       onClick={toggleSidebar}
-      style={{
-        background: "transparent",
-        color: "inherit",
-        border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "8px",
-        padding: "0.5rem 1rem",
-        fontSize: "0.875rem",
-        cursor: "pointer"
-      }}
+      className="border-slate-600 text-slate-100 hover:border-slate-500"
     >
-      {isSidebarOpen ? "Hide menu" : "Show menu"}
-    </button>
+      {isSidebarOpen ? "메뉴 숨기기" : "메뉴 보이기"}
+    </Button>
   );
 }

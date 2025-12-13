@@ -15,33 +15,16 @@ export function generateMetadata({ params }: CallbackPageProps): Metadata {
 
 export default function CallbackPage({ params, searchParams }: CallbackPageProps) {
   return (
-    <section
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "1rem",
-        padding: "4rem 1.5rem",
-        maxWidth: "720px",
-        margin: "0 auto"
-      }}
-    >
-      <h1>OAuth callback</h1>
-      <p>
-        Provider: <strong>{params.provider}</strong>
+    <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-16 text-slate-100">
+      <h1 className="text-3xl font-semibold text-slate-50">OAuth callback</h1>
+      <p className="text-base text-slate-300">
+        Provider: <strong className="font-semibold text-slate-100">{params.provider}</strong>
       </p>
-      <p>
-        This route should receive the backend redirect once the OAuth provider sends temporary auth
-        code/state. Hand the query params back to the backend over the fetcher.
+      <p className="text-sm text-slate-400">
+        This route should receive the backend redirect once the OAuth provider sends temporary auth code/state. Hand the
+        query params back to the backend over the fetcher.
       </p>
-      <pre
-        style={{
-          borderRadius: "12px",
-          border: "1px solid rgba(255,255,255,0.15)",
-          padding: "1rem",
-          overflowX: "auto",
-          fontSize: "0.85rem"
-        }}
-      >
+      <pre className="rounded-lg border border-slate-800 bg-slate-950/60 overflow-x-auto px-4 py-4 text-sm text-slate-200 shadow-sm">
         {JSON.stringify(searchParams, null, 2)}
       </pre>
     </section>

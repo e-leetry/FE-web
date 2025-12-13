@@ -16,23 +16,13 @@ const providerOptions = oauthProviders.map((provider) => ({
 
 export default function LoginPage() {
   return (
-    <section
-      style={{
-        maxWidth: "440px",
-        margin: "0 auto",
-        padding: "4rem 1.5rem",
-        display: "flex",
-        flexDirection: "column",
-        gap: "1.5rem"
-      }}
-    >
-      <div>
-        <p style={{ opacity: 0.7, margin: 0 }}>회원 전용</p>
-        <h1 style={{ margin: "0.5rem 0 0" }}>Login</h1>
+    <section className="mx-auto flex w-full max-w-xl flex-col gap-4 px-6 py-16 text-slate-100">
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-slate-400">회원 전용</p>
+        <h1 className="text-4xl font-semibold text-slate-50">Login</h1>
       </div>
-      <p style={{ margin: 0 }}>
-        Clicking the button below sends the browser to the backend authorize endpoint. OAuth token
-        exchange stays on the backend.
+      <p className="text-base text-slate-300">
+        아래 버튼을 누르면 백엔드 OAuth 인가 엔드포인트로 이동합니다. 토큰 교환은 백엔드에서 안전하게 처리됩니다.
       </p>
       <LoginProviderFlow providers={providerOptions} />
     </section>
