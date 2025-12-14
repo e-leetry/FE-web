@@ -37,10 +37,6 @@ export default function HomePage() {
       <div className="flex flex-col gap-2">
         <span className="text-sm text-slate-400">App Router · SSR shell</span>
         <h1 className="text-4xl font-semibold tracking-tight text-slate-50">Reetry Frontend</h1>
-        <p className="text-base leading-relaxed text-slate-300">
-          Minimal SSR-friendly surface that proxies backend capabilities. Use the login page to initiate OAuth flows
-          once providers are wired in.
-        </p>
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <Button asChild className="text-base font-semibold">
