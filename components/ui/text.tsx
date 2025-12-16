@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const textVariants = cva(
-  "inline text-[var(--text-color)] transition-colors hover:text-[var(--text-hover-color,var(--text-color))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950",
+  "inline text-[var(--text-color)] transition-colors hover:text-[var(--text-hover-color,var(--text-color))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
   {
     variants: {
       align: {
@@ -83,8 +83,8 @@ const Text = React.forwardRef<React.ElementRef<"span">, TextProps>((props, ref) 
     fontFamily,
     fontWeight: weightValue,
     fontSize: sizeScale.fontSize,
-    lineHeight: variant.lineHeight ?? sizeScale.lineHeight,
-    letterSpacing: variant.letterSpacing ?? sizeScale.letterSpacing,
+    lineHeight: sizeScale.lineHeight,
+    letterSpacing: sizeScale.letterSpacing,
     textTransform: variant.transform,
     ...style
   };

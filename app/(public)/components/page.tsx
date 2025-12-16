@@ -70,17 +70,18 @@ const sizeShowcase: Array<{ id: ButtonSize; label: string; helper: string }> = [
 
 export default function ComponentLibraryPage() {
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-16 text-slate-100">
-      <header className="flex flex-col gap-2">
-        <p className="text-sm text-slate-400">Design System · Preview</p>
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-50">컴포넌트 라이브러리</h1>
-        <p className="text-base text-slate-300">
-          colors.json에 정의된 상태 색상을 한 화면에서 확인하고 버튼 토큰과 맞춰볼 수 있습니다.
+    <section className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 py-16 text-slate-900">
+      <header className="flex flex-col gap-3">
+        <p className="text-sm font-medium text-slate-500">Design System · Preview</p>
+        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">컴포넌트 라이브러리</h1>
+        <p className="text-base text-slate-600">
+          colors.json에 정의된 상태 색상을 한 화면에서 확인하고 버튼, 타이포그래피 토큰을 한 곳에서
+          관리합니다.
         </p>
       </header>
       <section className="flex flex-col gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-300">버튼 시스템</p>
+          <p className="text-sm font-medium text-slate-700">버튼 시스템</p>
           <p className="text-sm text-slate-500">
             5가지 색상과 solid / outlined / soft / text 유형을 조합해 다양한 상태를 표현할 수
             있습니다.
@@ -90,7 +91,7 @@ export default function ComponentLibraryPage() {
           <Card>
             <CardHeader>
               <CardTitle>색상 · 타입 매트릭스</CardTitle>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-500">
                 동일한 컴포넌트 API로 색상과 타입을 조합할 수 있습니다.
               </p>
             </CardHeader>
@@ -98,7 +99,7 @@ export default function ComponentLibraryPage() {
               {buttonVariantShowcase.map((variant) => (
                 <div key={variant.id} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-100">{variant.label}</span>
+                    <span className="text-sm font-semibold text-slate-900">{variant.label}</span>
                     <span className="text-xs text-slate-500">{variant.helper}</span>
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -120,7 +121,7 @@ export default function ComponentLibraryPage() {
           <Card>
             <CardHeader>
               <CardTitle>Size Scale</CardTitle>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-500">
                 Small / Medium / Large 세 가지 규격으로 구성했습니다.
               </p>
             </CardHeader>
@@ -128,10 +129,10 @@ export default function ComponentLibraryPage() {
               {sizeShowcase.map((size) => (
                 <div
                   key={size.id}
-                  className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-900/40 px-3 py-3"
+                  className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-200">{size.label}</span>
+                    <span className="text-sm font-semibold text-slate-900">{size.label}</span>
                     <span className="text-xs text-slate-500">{size.helper}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">

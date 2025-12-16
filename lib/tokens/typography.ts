@@ -48,40 +48,40 @@ const typographyTokens = {
   },
   tones: {
     default: {
-      color: "#E2E8F0",
-      hoverColor: "#F8FAFC"
-    },
-    muted: {
-      color: "#CBD5E1",
-      hoverColor: "#E2E8F0"
-    },
-    subtle: {
-      color: "#94A3B8",
-      hoverColor: "#CBD5E1"
-    },
-    accent: {
-      color: "#38BDF8",
-      hoverColor: "#0EA5E9"
-    },
-    success: {
-      color: "#34D399",
-      hoverColor: "#10B981"
-    },
-    warning: {
-      color: "#FBBF24",
-      hoverColor: "#F59E0B"
-    },
-    danger: {
-      color: "#F87171",
-      hoverColor: "#EF4444"
-    },
-    info: {
-      color: "#67E8F9",
-      hoverColor: "#22D3EE"
-    },
-    inverted: {
       color: "#0F172A",
       hoverColor: "#020617"
+    },
+    muted: {
+      color: "#334155",
+      hoverColor: "#1E293B"
+    },
+    subtle: {
+      color: "#64748B",
+      hoverColor: "#475569"
+    },
+    accent: {
+      color: "#1D4ED8",
+      hoverColor: "#1E3A8A"
+    },
+    success: {
+      color: "#15803D",
+      hoverColor: "#166534"
+    },
+    warning: {
+      color: "#B45309",
+      hoverColor: "#92400E"
+    },
+    danger: {
+      color: "#B91C1C",
+      hoverColor: "#991B1B"
+    },
+    info: {
+      color: "#0F766E",
+      hoverColor: "#115E59"
+    },
+    inverted: {
+      color: "#F8FAFC",
+      hoverColor: "#E2E8F0"
     }
   },
   variants: {
@@ -91,7 +91,8 @@ const typographyTokens = {
       size: "3xl",
       lineHeight: "1.1",
       letterSpacing: "-0.04em",
-      tone: "default"
+      tone: "default",
+      transform: undefined
     },
     headline: {
       font: "sans",
@@ -99,31 +100,36 @@ const typographyTokens = {
       size: "2xl",
       lineHeight: "1.2",
       letterSpacing: "-0.03em",
-      tone: "default"
+      tone: "default",
+      transform: undefined
     },
     title: {
       font: "sans",
       weight: "semibold",
       size: "xl",
-      tone: "default"
+      tone: "default",
+      transform: undefined
     },
     subtitle: {
       font: "sans",
       weight: "medium",
       size: "lg",
-      tone: "muted"
+      tone: "muted",
+      transform: undefined
     },
     body: {
       font: "sans",
       weight: "regular",
       size: "md",
-      tone: "default"
+      tone: "default",
+      transform: undefined
     },
     bodySmall: {
       font: "sans",
       weight: "regular",
       size: "sm",
-      tone: "subtle"
+      tone: "subtle",
+      transform: undefined
     },
     caption: {
       font: "sans",
@@ -137,7 +143,8 @@ const typographyTokens = {
       font: "mono",
       weight: "medium",
       size: "sm",
-      tone: "accent"
+      tone: "accent",
+      transform: undefined
     },
     overline: {
       font: "sans",
