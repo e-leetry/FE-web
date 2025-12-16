@@ -1,3 +1,4 @@
+import { TypographySystemSection } from "@/components/components-page/typography-system-section";
 import {
   Button,
   type ButtonColor,
@@ -150,6 +151,7 @@ export default function ComponentLibraryPage() {
           </Card>
         </div>
       </section>
+      <TypographySystemSection />
     </section>
   );
 }
