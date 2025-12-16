@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { LOGIN_PATH, isPublicRoute } from "@/lib/auth/routes";
 import { getSessionCookieName, isLoggedInFromCookie } from "@/lib/auth/session";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicRoute(pathname)) {
