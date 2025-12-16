@@ -1,6 +1,14 @@
 {
   "buttons": {
     "primary": {
+      "solid": {
+        "background": "#2563EB",
+        "border": "transparent",
+        "text": "#FFFFFF",
+        "hoverBackground": "#3B82F6",
+        "hoverText": "#FFFFFF",
+        "ring": "#60A5FA"
+      },
       "outlined": {
         "background": "transparent",
         "border": "#3B82F6",
@@ -27,6 +35,14 @@
       }
     },
     "secondary": {
+      "solid": {
+        "background": "#334155",
+        "border": "transparent",
+        "text": "#F1F5F9",
+        "hoverBackground": "#475569",
+        "hoverText": "#F1F5F9",
+        "ring": "#94A3B8"
+      },
       "outlined": {
         "background": "transparent",
         "border": "#64748B",
@@ -53,6 +69,14 @@
       }
     },
     "info": {
+      "solid": {
+        "background": "#0891B2",
+        "border": "transparent",
+        "text": "#FFFFFF",
+        "hoverBackground": "#06B6D4",
+        "hoverText": "#FFFFFF",
+        "ring": "#22D3EE"
+      },
       "outlined": {
         "background": "transparent",
         "border": "#06B6D4",
@@ -79,6 +103,14 @@
       }
     },
     "warning": {
+      "solid": {
+        "background": "#F59E0B",
+        "border": "transparent",
+        "text": "#78350F",
+        "hoverBackground": "#FBBF24",
+        "hoverText": "#78350F",
+        "ring": "#FCD34D"
+      },
       "outlined": {
         "background": "transparent",
         "border": "#FBBF24",
@@ -105,6 +137,14 @@
       }
     },
     "error": {
+      "solid": {
+        "background": "#E11D48",
+        "border": "transparent",
+        "text": "#FFFFFF",
+        "hoverBackground": "#F43F5E",
+        "hoverText": "#FFFFFF",
+        "ring": "#FB7185"
+      },
       "outlined": {
         "background": "transparent",
         "border": "#F43F5E",
