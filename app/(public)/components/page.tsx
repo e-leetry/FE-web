@@ -55,17 +55,17 @@ const buttonColorOptions = (
   Object.entries(paletteMeta) as Array<[ButtonColor, { label: string; description: string }]>
 ).map(([id, meta]) => ({ id, label: meta.label, description: meta.description }));
 
-const buttonVariantShowcase: Array<{ id: ButtonVariant; label: string; helper: string }> = [
-  { id: "solid", label: "Solid", helper: "가장 강조가 필요한 CTA" },
-  { id: "outlined", label: "Outlined", helper: "보조 액션 혹은 세컨더리 CTA" },
-  { id: "soft", label: "Soft", helper: "콘텐츠 내 포함되는 부드러운 강조" },
-  { id: "text", label: "Text", helper: "링크 또는 최소한의 강조" }
+const buttonVariantShowcase: Array<{ id: ButtonVariant; label: string }> = [
+  { id: "solid", label: "Solid" },
+  { id: "outlined", label: "Outlined" },
+  { id: "soft", label: "Soft" },
+  { id: "text", label: "Text" }
 ];
 
-const sizeShowcase: Array<{ id: ButtonSize; label: string; helper: string }> = [
-  { id: "sm", label: "Small", helper: "폼 내부 보조 버튼" },
-  { id: "md", label: "Medium", helper: "기본 값" },
-  { id: "lg", label: "Large", helper: "주요 CTA" }
+const sizeShowcase: Array<{ id: ButtonSize; label: string }> = [
+  { id: "sm", label: "Small" },
+  { id: "md", label: "Medium" },
+  { id: "lg", label: "Large" }
 ];
 
 export default function ComponentLibraryPage() {
@@ -73,7 +73,9 @@ export default function ComponentLibraryPage() {
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 py-16 text-slate-900">
       <header className="flex flex-col gap-3">
         <p className="text-sm font-medium text-slate-500">Design System · Preview</p>
-        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">컴포넌트 라이브러리</h1>
+        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
+          컴포넌트 라이브러리
+        </h1>
         <p className="text-base text-slate-600">
           colors.json에 정의된 상태 색상을 한 화면에서 확인하고 버튼, 타이포그래피 토큰을 한 곳에서
           관리합니다.
@@ -82,10 +84,6 @@ export default function ComponentLibraryPage() {
       <section className="flex flex-col gap-4">
         <div>
           <p className="text-sm font-medium text-slate-700">버튼 시스템</p>
-          <p className="text-sm text-slate-500">
-            5가지 색상과 solid / outlined / soft / text 유형을 조합해 다양한 상태를 표현할 수
-            있습니다.
-          </p>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
@@ -98,10 +96,7 @@ export default function ComponentLibraryPage() {
             <CardContent className="space-y-6">
               {buttonVariantShowcase.map((variant) => (
                 <div key={variant.id} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-900">{variant.label}</span>
-                    <span className="text-xs text-slate-500">{variant.helper}</span>
-                  </div>
+                  <span className="text-sm font-semibold text-slate-900">{variant.label}</span>
                   <div className="flex flex-wrap gap-3">
                     {buttonColorOptions.map((color) => (
                       <Button
@@ -131,10 +126,7 @@ export default function ComponentLibraryPage() {
                   key={size.id}
                   className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-900">{size.label}</span>
-                    <span className="text-xs text-slate-500">{size.helper}</span>
-                  </div>
+                  <span className="text-sm font-semibold text-slate-900">{size.label}</span>
                   <div className="flex flex-wrap gap-2">
                     <Button size={size.id} color="primary">
                       기본 버튼

@@ -13,15 +13,50 @@ const variantShowcase: Array<{
   helper: string;
   sample: string;
 }> = [
-  { id: "display", label: "Display", helper: "히어로 · 랜딩 헤더", sample: "애플리케이션 메시지를 강조하는 디스플레이 타입" },
-  { id: "headline", label: "Headline", helper: "섹션 타이틀", sample: "섹션 진입점을 명확히 보여줍니다." },
+  {
+    id: "display",
+    label: "Display",
+    helper: "히어로 · 랜딩 헤더",
+    sample: "애플리케이션 메시지를 강조하는 디스플레이 타입"
+  },
+  {
+    id: "headline",
+    label: "Headline",
+    helper: "섹션 타이틀",
+    sample: "섹션 진입점을 명확히 보여줍니다."
+  },
   { id: "title", label: "Title", helper: "카드 타이틀", sample: "콘텐츠 블록 이름을 표시합니다." },
-  { id: "subtitle", label: "Subtitle", helper: "요약 설명", sample: "본문보다 약간 작은 톤으로 설명합니다." },
+  {
+    id: "subtitle",
+    label: "Subtitle",
+    helper: "요약 설명",
+    sample: "본문보다 약간 작은 톤으로 설명합니다."
+  },
   { id: "body", label: "Body", helper: "기본 본문", sample: "일반 텍스트 정보 영역에 사용합니다." },
-  { id: "bodySmall", label: "Body Small", helper: "보조 본문", sample: "상세 설명, 툴팁 등에 적합합니다." },
-  { id: "caption", label: "Caption", helper: "라벨 · 배지", sample: "상태 설명이나 메타 정보에 사용합니다." },
-  { id: "mono", label: "Monospace", helper: "데이터 · 코드", sample: "숫자나 코드를 정렬감 있게 제공합니다." },
-  { id: "overline", label: "Overline", helper: "섹션 카테고리", sample: "섹션 상단 보조 라벨입니다." }
+  {
+    id: "bodySmall",
+    label: "Body Small",
+    helper: "보조 본문",
+    sample: "상세 설명, 툴팁 등에 적합합니다."
+  },
+  {
+    id: "caption",
+    label: "Caption",
+    helper: "라벨 · 배지",
+    sample: "상태 설명이나 메타 정보에 사용합니다."
+  },
+  {
+    id: "mono",
+    label: "Monospace",
+    helper: "데이터 · 코드",
+    sample: "숫자나 코드를 정렬감 있게 제공합니다."
+  },
+  {
+    id: "overline",
+    label: "Overline",
+    helper: "섹션 카테고리",
+    sample: "섹션 상단 보조 라벨입니다."
+  }
 ];
 
 const sizeScale = Object.entries(typographyTokens.sizes).map(([id, scale]) => ({
@@ -58,9 +93,6 @@ export function TypographySystemSection() {
         </Text>
         <Text asChild variant="headline" className="block">
           텍스트 토큰 & 프리셋
-        </Text>
-        <Text variant="subtitle">
-          폰트, 크기, 톤, 굵기를 토큰으로 정리해 일관된 타이포그래피 경험을 제공합니다.
         </Text>
       </div>
 
@@ -178,11 +210,7 @@ export function TypographySystemSection() {
                     {font.usage}
                   </Text>
                 </div>
-                <Text
-                  variant="body"
-                  style={{ fontFamily: font.stack }}
-                  className="text-base"
-                >
+                <Text variant="body" style={{ fontFamily: font.stack }} className="text-base">
                   가독성과 일관성을 위한 폰트 스택
                 </Text>
                 <div className="mt-2 flex flex-wrap gap-2">
