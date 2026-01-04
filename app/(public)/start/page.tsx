@@ -2,14 +2,15 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Text } from "@/components/ui/text";
+import { LoginModal } from "@/components/auth/login-modal";
+import { Header } from "@/components/layout/header";
 
 export default function StartPage() {
   const [link, setLink] = useState("");
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,24 +23,7 @@ export default function StartPage() {
       {/* Background Dim & Blur */}
       <div className="absolute inset-0 z-0 bg-[#2B2B2B]/40 backdrop-blur-[4px]" />
 
-      {/* Header Placeholder */}
-      <header className="absolute top-0 flex h-[64px] w-full items-center justify-between border-b border-[#EEEEEE] bg-white px-[40px] py-[23px] z-10">
-        <div className="flex items-center gap-2">
-          <Image
-            src="/images/logo/logo1.png"
-            alt="Reet Logo"
-            width={51}
-            height={22}
-            className="h-[22.39px] w-[51px]"
-          />
-        </div>
-        <Link
-          href="/login"
-          className="text-[13px] font-semibold tracking-[-0.02em] text-[#343E4C]/80"
-        >
-          로그인
-        </Link>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-1 w-full items-center justify-center px-4 pt-[64px]">
@@ -77,6 +61,7 @@ export default function StartPage() {
           </div>
         </div>
       </div>
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </main>
   );
 }
