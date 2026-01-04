@@ -2,7 +2,7 @@ export const LOGIN_PATH = "/login";
 export const AUTH_CALLBACK_PREFIX = "/auth/callback";
 export const COMPONENTS = "/components";
 
-export const publicRoutes = ["/", LOGIN_PATH, AUTH_CALLBACK_PREFIX, COMPONENTS];
+export const publicRoutes = ["/", LOGIN_PATH, AUTH_CALLBACK_PREFIX, COMPONENTS, "/start"];
 export const authRoutes = [LOGIN_PATH];
 
 export const oauthProviders = ["google", "apple", "kakao"] as const;

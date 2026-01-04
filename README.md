@@ -25,6 +25,7 @@ pnpm dev
 
 - 필요한 키는 `.env.example`에 정리되어 있습니다. 이를 복사해 `.env.local`, `.env.dev`, `.env.prod` 등으로 사용처별 값을 지정하세요.
 - `pnpm run dev`는 기본적으로 `.env.local`을 자동 로드합니다. 다른 파일을 쓰고 싶다면 `ENV_FILE=.env.dev pnpm run dev`처럼 실행합니다.
+- Windows PowerShell에서는 `$Env:ENV_FILE=".env.dev"; pnpm run dev`처럼 환경 변수를 먼저 지정하면 동일하게 동작합니다.
 - `pnpm run build:env`는 빌드 시 동일하게 동작합니다. 예: `ENV_FILE=.env.prod pnpm run build:env`.
 - 일반 `pnpm run build`는 Next.js 기본 우선순위(`.env.production` → `.env` → `.env.local`)를 그대로 따릅니다.
 
