@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 
 import { colorTokens } from "@/lib/tokens/colors";
 import { cn } from "@/lib/utils";
@@ -21,46 +21,55 @@ type ButtonCSSVariables = {
 };
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg border font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:pointer-events-none disabled:opacity-60 bg-[var(--btn-bg)] text-[var(--btn-text)] border-[var(--btn-border)] hover:bg-[var(--btn-hover-bg)] hover:text-[var(--btn-hover-text)] focus-visible:ring-[var(--btn-ring)]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        solid: "border-transparent shadow-sm",
-        outlined: "shadow-sm",
-        soft: "border-transparent",
-        text: "border-transparent bg-transparent shadow-none"
+        default: "bg-slate-900 text-slate-50 hover:bg-slate-900/90",
+        destructive: "bg-red-500 text-slate-50 hover:bg-red-500/90",
+        outline: "border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900",
+        secondary: "bg-slate-100 text-slate-900 hover:bg-slate-100/80",
+        ghost: "hover:bg-slate-100 hover:text-slate-900",
+        link: "text-slate-900 underline-offset-4 hover:underline",
+        // Project specific variants (mapped to solid/outlined/soft/text if needed)
+        solid:
+          "bg-[var(--btn-bg)] text-[var(--btn-text)] border border-transparent hover:bg-[var(--btn-hover-bg)]",
+        outlined:
+          "bg-[var(--btn-bg)] text-[var(--btn-text)] border border-[var(--btn-border)] hover:bg-[var(--btn-hover-bg)]",
+        soft: "bg-[var(--btn-bg)] text-[var(--btn-text)] border border-transparent hover:bg-[var(--btn-hover-bg)]",
+        text: "bg-transparent text-[var(--btn-text)] border border-transparent hover:bg-[var(--btn-hover-bg)]"
       },
       size: {
-        sm: "h-9 px-3 text-sm",
-        md: "h-10 px-4 text-sm",
-        lg: "h-12 px-6 text-base"
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10"
       }
     },
     defaultVariants: {
-      variant: "solid",
-      size: "md"
+      variant: "default",
+      size: "default"
     }
   }
 );
 
 export type ButtonColor = ButtonColorKey;
-export type ButtonVariant = ButtonVariantKey;
-export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
+export type ButtonSize = VariantProps<typeof buttonVariants>["size"];
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   isLoading?: boolean;
-  variant?: ButtonVariant;
   color?: ButtonColor;
-  size?: ButtonSize;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
   const {
     className,
-    variant: variantProp,
+    variant = "default",
+    size = "default",
     color: colorProp,
-    size,
     asChild = false,
     isLoading = false,
     children,
@@ -68,20 +77,27 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => 
     style,
     ...rest
   } = props;
-  const variant = variantProp ?? "solid";
+
   const color = colorProp ?? "primary";
-  const palette = buttonPalette[color][variant];
+  // Only use project specific palette if variant is one of solid, outlined, soft, text
+  const isProjectVariant = ["solid", "outlined", "soft", "text"].includes(variant as string);
+  const palette = isProjectVariant
+    ? buttonPalette[color][(variant as ButtonVariantKey) ?? "solid"]
+    : null;
+
   const Comp = asChild ? Slot : "button";
   const showSpinner = isLoading && !asChild;
 
-  const colorStyle: ButtonCSSVariables = {
-    "--btn-bg": palette.background,
-    "--btn-border": palette.border,
-    "--btn-text": palette.text,
-    "--btn-hover-bg": palette.hoverBackground,
-    "--btn-hover-text": palette.hoverText,
-    "--btn-ring": palette.ring
-  };
+  const colorStyle: ButtonCSSVariables = palette
+    ? {
+        "--btn-bg": palette.background,
+        "--btn-border": palette.border,
+        "--btn-text": palette.text,
+        "--btn-hover-bg": palette.hoverBackground,
+        "--btn-hover-text": palette.hoverText,
+        "--btn-ring": palette.ring
+      }
+    : {};
 
   let childContent: React.ReactNode = children;
 
@@ -101,7 +117,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => 
 
   return (
     <Comp
-      className={cn(buttonVariants({ variant, size }), className)}
+      className={cn(buttonVariants({ variant, size, className }))}
       ref={ref}
       disabled={disabled || isLoading}
       data-loading={isLoading ? "" : undefined}

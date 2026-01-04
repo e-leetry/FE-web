@@ -10,8 +10,7 @@ export function SidebarToggle() {
   return (
     <Button
       type="button"
-      variant="outlined"
-      color="secondary"
+      variant="outline"
       size="sm"
       aria-pressed={isSidebarOpen}
       aria-label={isSidebarOpen ? "사이드바 숨기기" : "사이드바 보이기"}

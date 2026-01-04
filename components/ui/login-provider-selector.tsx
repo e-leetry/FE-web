@@ -37,25 +37,25 @@ export function LoginProviderSelector({ providers, onSelect }: LoginProviderSele
           value={provider}
           className={({ checked }) =>
             cn(
-              "rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-2 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950",
-              checked && "border-sky-300 bg-slate-900"
+              "rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2",
+              checked && "border-slate-900 bg-slate-50 ring-1 ring-slate-900"
             )
           }
         >
           {({ checked }) => (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <p className="text-base font-semibold text-slate-100">{provider.label}</p>
+                <p className="text-base font-semibold text-slate-900">{provider.label}</p>
                 <span
                   className={cn(
                     "text-xs font-medium uppercase tracking-wide text-slate-500",
-                    checked && "text-sky-300"
+                    checked && "text-slate-900"
                   )}
                 >
                   {checked ? "선택됨" : "선택"}
                 </span>
               </div>
-              <p className="text-sm text-slate-400">{provider.description}</p>
+              <p className="text-sm text-slate-500">{provider.description}</p>
             </div>
           )}
         </RadioGroup.Option>
