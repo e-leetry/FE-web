@@ -6,11 +6,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoginModal } from "@/components/auth/login-modal";
-import { Header } from "@/components/layout/header";
 
 export default function StartPage() {
   const [link, setLink] = useState("");
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,12 +18,7 @@ export default function StartPage() {
   };
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center overflow-hidden bg-[#F6F7F9]">
-      {/* Background Dim & Blur */}
-      <div className="absolute inset-0 z-0 bg-[#2B2B2B]/40 backdrop-blur-[4px]" />
-
-      <Header />
-
+    <>
       {/* Main Content */}
       <div className="relative z-10 flex flex-1 w-full items-center justify-center px-4 pt-[64px]">
         <div className="flex w-full max-w-[798px] flex-col items-center gap-[48px]">
@@ -62,6 +56,6 @@ export default function StartPage() {
         </div>
       </div>
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
-    </main>
+    </>
   );
 }
