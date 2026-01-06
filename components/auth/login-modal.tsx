@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { buildAuthorizeUrl } from "@/lib/auth/routes";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,6 +10,14 @@ interface LoginModalProps {
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   if (!isOpen) return null;
+
+  const handleGoogleLogin = () => {
+    window.location.href = buildAuthorizeUrl("google");
+  };
+
+  const handleKakaoLogin = () => {
+    window.location.href = buildAuthorizeUrl("kakao");
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -35,13 +44,19 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
         <div className="flex w-full flex-col gap-3">
           {/* Kakao Login Button */}
-          <button className="flex h-16 w-full items-center justify-center gap-2 rounded-[16px] bg-[#FDDC3F] p-3 px-6 text-[16px] font-semibold tracking-[-0.02em] text-[#3A2929] hover:bg-[#FDDC3F]/90 border-none shadow-none">
+          <button
+            onClick={handleKakaoLogin}
+            className="flex h-16 w-full items-center justify-center gap-2 rounded-[16px] bg-[#FDDC3F] p-3 px-6 text-[16px] font-semibold tracking-[-0.02em] text-[#3A2929] hover:bg-[#FDDC3F]/90 border-none shadow-none"
+          >
             <Image src="/images/auth/kakao-icon.svg" alt="Kakao" width={20} height={20} />
             카카오 계정으로 로그인
           </button>
 
           {/* Google Login Button */}
-          <button className="flex h-16 w-full items-center justify-center gap-2 rounded-[16px] border-[#E5E5E5] border-[1.5px] bg-transparent p-3 px-6 text-[16px] font-semibold tracking-[-0.02em] text-[#343E4C] hover:bg-[#E5E5E5]/10 shadow-none">
+          <button
+            onClick={handleGoogleLogin}
+            className="flex h-16 w-full items-center justify-center gap-2 rounded-[16px] border-[#E5E5E5] border-[1.5px] bg-transparent p-3 px-6 text-[16px] font-semibold tracking-[-0.02em] text-[#343E4C] hover:bg-[#E5E5E5]/10 shadow-none"
+          >
             <Image src="/images/auth/google-icon.png" alt="Google" width={20} height={20} />
             구글 계정으로 로그인
           </button>

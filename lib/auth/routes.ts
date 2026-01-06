@@ -29,7 +29,7 @@ export function buildAuthorizeUrl(provider: OAuthProvider) {
     return `/auth/${provider}/authorize`;
   }
 
-  return new URL(`/oauth2/${provider}/authorize`, base).toString();
+  return new URL(`/oauth2/authorization/${provider}`, base).toString();
 }
 
 export function buildCallbackPath(provider: OAuthProvider) {
