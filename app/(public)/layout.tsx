@@ -14,7 +14,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <div className="absolute inset-0 z-0 bg-[#2B2B2B]/40 backdrop-blur-[4px]" />
       )}
 
-      <Header />
+      <Header transparent={isOnboarding} isDark={isOnboarding} />
 
       <div className="flex-1 w-full flex flex-col items-center">
         {children}
