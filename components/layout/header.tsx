@@ -14,8 +14,8 @@ export function Header({ transparent, isDark }: HeaderProps) {
   return (
     <header
       className={cn(
-        "absolute top-0 flex h-[64px] w-full items-center justify-between px-[40px] py-[23px] z-50 transition-colors",
-        transparent ? "bg-transparent border-transparent" : "bg-white border-b border-[#EEEEEE]"
+        "flex h-[64px] w-full items-center justify-between px-[40px] py-[23px] z-50 transition-colors",
+        transparent ? "absolute top-0 bg-transparent border-transparent" : "bg-white border-b border-[#EEEEEE]"
       )}
     >
       <div className="flex items-center gap-2">

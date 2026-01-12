@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 
@@ -51,14 +52,14 @@ const COLUMNS: Column[] = [
 
 export default function DashboardPage() {
   return (
-    <div className="flex h-full w-full flex-col bg-[#F9FAFB]">
-      <main className="flex-1 overflow-x-auto pt-[64px]">
-        <div className="flex h-full min-w-max p-8">
+    <div className="flex h-full w-full flex-col bg-[#F6F7F9]">
+      <main className="flex-1 overflow-x-auto">
+        <div className="flex h-full min-w-max gap-[32px] px-[240px] py-8">
           {COLUMNS.map((column, index) => (
-            <div key={column.id} className="flex flex-row">
-              <div className="flex w-[248px] flex-col gap-4">
+            <React.Fragment key={column.id}>
+              <div className="flex w-[236px] flex-col gap-[16px]">
                 <StatusHeader title={column.title} count={column.jobs.length} />
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-[16px]">
                   {column.jobs.map((job) => (
                     <JobCard
                       key={job.id}
@@ -72,9 +73,9 @@ export default function DashboardPage() {
                 </div>
               </div>
               {index < COLUMNS.length - 1 && (
-                <div className="mx-6 w-[1px] self-stretch bg-[#E5E7EB]" />
+                <div className="w-[1px] self-stretch bg-[#E9E9E9]" />
               )}
-            </div>
+            </React.Fragment>
           ))}
         </div>
       </main>
