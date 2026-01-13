@@ -1,4 +1,3 @@
-/** @jsxImportSource react */
 "use client";
 
 import Link from "next/link";
@@ -6,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoginModal } from "@/components/auth/login-modal";
+import { DimOverlay } from "@/components/ui/dim-overlay";
 
 export default function StartPage() {
   const [link, setLink] = useState("");
@@ -20,27 +20,27 @@ export default function StartPage() {
   return (
     <>
       {/* Main Content */}
-      <div className="relative z-10 flex flex-1 w-full items-center justify-center px-4 pt-[64px]">
+      <div className="relative z-[110] flex flex-1 w-full items-center justify-center px-4">
         <div className="flex w-full max-w-[798px] flex-col items-center gap-[48px]">
-          <div className="flex flex-col items-center gap-6 w-full">
+          <div className="flex flex-col items-center gap-[24px] w-full">
             <h1 className="text-center text-[36px] font-bold leading-[1.5] tracking-[-0.02em] text-[#FAFAFA]">
               3초 만에 채용 공고를 정리해요
             </h1>
 
             <form
               onSubmit={handleSubmit}
-              className="flex w-full items-center gap-3 rounded-[32px] bg-white p-[20px] pl-[32px]"
+              className="flex w-full items-center gap-[12px] rounded-[320px] bg-[#FAFAFA] p-[16px]"
             >
               <Input
                 type="text"
                 placeholder="등록할 채용 공고의 링크를 입력해주세요"
                 value={link}
                 onChange={(e) => setLink(e.target.value)}
-                className="h-auto border-none bg-transparent p-0 text-[24px] font-medium leading-[1.5] tracking-[-0.02em] text-[#2B2B2B] placeholder:text-[#9E9E9E] focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-auto border-none bg-transparent px-[16px] py-0 text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#2B2B2B] placeholder:text-[#9E9E9E] focus-visible:ring-0 focus-visible:ring-offset-0"
               />
               <Button
                 type="submit"
-                className="h-auto shrink-0 rounded-[32px] bg-[#2B2B2B] px-[16px] py-[12px] text-[20px] font-semibold leading-[1.5] tracking-[-0.02em] text-[#FAFAFA] hover:bg-[#2B2B2B]/90"
+                className="h-auto shrink-0 rounded-[320px] bg-[#2B2B2B] px-[16px] py-[12px] text-[18px] font-semibold leading-[1.5] tracking-[-0.02em] text-[#FAFAFA] hover:bg-[#2B2B2B]/90"
               >
                 등록하기
               </Button>
@@ -55,7 +55,7 @@ export default function StartPage() {
           </div>
         </div>
       </div>
-      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      <DimOverlay position="fixed" pointerEvents={false} className="z-[100]" />
     </>
   );
 }

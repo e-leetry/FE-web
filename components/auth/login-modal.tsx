@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { buildAuthorizeUrl } from "@/lib/auth/routes";
+import { DimOverlay } from "@/components/ui/dim-overlay";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Background Dim & Blur */}
-      <div className="absolute inset-0 bg-[#2B2B2B]/40 backdrop-blur-[4px]" onClick={onClose} />
+      <DimOverlay onClick={onClose} />
 
       {/* Modal Card */}
       <div className="relative z-10 flex w-[400px] flex-col items-center gap-8 rounded-[24px] border border-[#FAFAFA]/10 bg-[#FAFAFA] p-10 px-6 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.05)]">
