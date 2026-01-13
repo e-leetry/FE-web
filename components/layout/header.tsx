@@ -15,16 +15,18 @@ export function Header({ transparent, isDark }: HeaderProps) {
     <header
       className={cn(
         "flex h-[64px] w-full items-center justify-between px-[40px] py-[23px] z-50 transition-colors",
-        transparent ? "absolute top-0 bg-transparent border-transparent" : "bg-white border-b border-[#EEEEEE]"
+        transparent
+          ? "absolute top-0 bg-transparent border-transparent"
+          : "bg-white border-b border-[#EEEEEE]"
       )}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-[9px]">
         <Image
-          src="/images/logo/logo1.png"
+          src="/images/logo/logo-kr.png"
           alt="Reet Logo"
-          width={51}
-          height={22}
-          className={cn("h-[22.39px] w-[51px]", isDark && "brightness-0 invert")}
+          width={75}
+          height={28}
+          className={cn("h-[28px] w-[75px]", isDark && "brightness-0 invert")}
         />
       </div>
       <Link
