@@ -10,9 +10,21 @@ import { DimOverlay } from "@/components/ui/dim-overlay";
 export default function StartPage() {
   const [link, setLink] = useState("");
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isInvalid, setIsInvalid] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // URL 형식 검증
+    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+
+    if (!urlPattern.test(link)) {
+      setIsInvalid(true);
+      setLink("");
+      return;
+    }
+
+    setIsInvalid(false);
     // TODO: 등록 로직 구현
     console.log("Registering link:", link);
   };
@@ -33,10 +45,15 @@ export default function StartPage() {
             >
               <Input
                 type="text"
-                placeholder="등록할 채용 공고의 링크를 입력해주세요"
+                placeholder={isInvalid ? "올바른 형식의 링크를 입력해주세요" : "등록할 채용 공고의 링크를 입력해주세요"}
                 value={link}
-                onChange={(e) => setLink(e.target.value)}
-                className="h-auto border-none bg-transparent px-[16px] py-0 text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#2B2B2B] placeholder:text-[#9E9E9E] focus-visible:ring-0 focus-visible:ring-offset-0"
+                onChange={(e) => {
+                  setLink(e.target.value);
+                  setIsInvalid(false);
+                }}
+                className={`h-auto border-none bg-transparent px-[16px] py-0 text-[20px] font-medium leading-[1.5] tracking-[-0.02em] text-[#2B2B2B] focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                  isInvalid ? "placeholder:text-[#F05552]" : "placeholder:text-[#9E9E9E]"
+                }`}
               />
               <Button
                 type="submit"
@@ -50,7 +67,7 @@ export default function StartPage() {
               href="/login"
               className="text-[20px] font-semibold leading-[1.5] tracking-[-0.02em] text-[#FAFAFA]"
             >
-              이미 가입했나요? 로그인하면 바로 쓸 수 있어요
+              이미 가입했나요? <span className="underline">로그인</span>하면 바로 쓸 수 있어요
             </Link>
           </div>
         </div>
