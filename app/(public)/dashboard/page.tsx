@@ -52,33 +52,29 @@ const COLUMNS: Column[] = [
 
 export default function DashboardPage() {
   return (
-    <div className="flex h-full w-full flex-col bg-[#F6F7F9]">
-      <main className="flex-1 overflow-x-auto">
-        <div className="flex h-full min-w-max gap-[32px] px-[240px] py-8">
-          {COLUMNS.map((column, index) => (
-            <React.Fragment key={column.id}>
-              <div className="flex w-[236px] flex-col gap-[16px]">
-                <StatusHeader title={column.title} count={column.jobs.length} />
-                <div className="flex flex-col gap-[16px]">
-                  {column.jobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      type={job.type || "white"}
-                      company={job.company}
-                      position={job.position}
-                      deadline={job.deadline}
-                    />
-                  ))}
-                  <JobCard type="add" />
-                </div>
-              </div>
-              {index < COLUMNS.length - 1 && (
-                <div className="w-[1px] self-stretch bg-[#E9E9E9]" />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </main>
+    <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
+      <div className="flex min-w-fit flex-1 gap-[20px] px-[80px] py-8 min-[1920px]:gap-[32px] min-[1920px]:px-[240px]">
+        {COLUMNS.flatMap((column, index) => [
+          <div key={column.id} className="flex min-w-[180px] flex-1 flex-col gap-[16px]">
+            <StatusHeader title={column.title} count={column.jobs.length} />
+            <div className="flex flex-col gap-[16px]">
+              {column.jobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  type={job.type || "white"}
+                  company={job.company}
+                  position={job.position}
+                  deadline={job.deadline}
+                />
+              ))}
+              <JobCard type="add" />
+            </div>
+          </div>,
+          ...(index < COLUMNS.length - 1 ? [
+            <div key={`sep-${index}`} className="w-[1px] flex-shrink-0 self-stretch bg-[#E9E9E9]" />
+          ] : [])
+        ])}
+      </div>
     </div>
   );
 }

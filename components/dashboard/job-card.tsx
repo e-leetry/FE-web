@@ -26,7 +26,7 @@ export function JobCard({
       <Card
         onClick={onClick}
         className={cn(
-          "flex h-[144px] w-[236px] cursor-pointer flex-row items-center justify-center gap-2 rounded-[16px] border-dashed border-[#D1D5DB] bg-transparent p-[20px] shadow-none hover:bg-slate-50",
+          "flex h-[144px] w-[180px] cursor-pointer flex-row items-center justify-center gap-2 rounded-[16px] border-dashed border-[#D1D5DB] bg-transparent p-[20px] shadow-none hover:bg-slate-50 min-[1440px]:w-[236px]",
           className
         )}
       >
@@ -40,7 +40,7 @@ export function JobCard({
     return (
       <Card
         className={cn(
-          "flex h-[144px] w-[236px] flex-col justify-between rounded-[16px] bg-white p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)]",
+          "flex h-[144px] w-[180px] flex-col justify-between rounded-[16px] bg-white p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)] min-[1440px]:w-[236px]",
           className
         )}
       >
@@ -62,7 +62,7 @@ export function JobCard({
   return (
     <Card
       className={cn(
-        "flex h-[144px] w-[236px] flex-col justify-between rounded-[16px] bg-[#FAFAFA] p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)]",
+        "flex h-[144px] w-[180px] flex-col justify-between rounded-[16px] bg-[#FAFAFA] p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)] min-[1440px]:w-[236px]",
         className
       )}
     >
