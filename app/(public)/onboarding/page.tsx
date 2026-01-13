@@ -41,7 +41,9 @@ export default function StartPage() {
 
             <form
               onSubmit={handleSubmit}
-              className="flex w-full items-center gap-[12px] rounded-[320px] bg-[#FAFAFA] p-[16px]"
+              className={`flex w-full items-center gap-[12px] rounded-[320px] bg-[#FAFAFA] p-[16px] transition-all duration-300 ${
+                isInvalid ? "animate-shake border-2 border-[#F05552]" : ""
+              }`}
             >
               <Input
                 type="text"
