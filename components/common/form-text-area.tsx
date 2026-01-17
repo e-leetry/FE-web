@@ -15,10 +15,11 @@ interface FormTextAreaProps<
   className?: string;
   labelClassName?: string;
   textareaClassName?: string;
+  rows?: number;
 }
 
 const TEXTAREA_BASE_CLASS =
-  "w-full p-4 border border-[#EEEEEE] rounded-[12px] text-[#282828] text-[15px] bg-white placeholder:text-[#BDBDBD] focus:outline-none focus:border-[#282828] transition-colors h-[100px] resize-none";
+  "w-full p-4 border border-[#EEEEEE] rounded-[12px] text-[#282828] text-[15px] bg-white placeholder:text-[#BDBDBD] focus:outline-none focus:border-[#282828] transition-colors resize-none";
 
 /**
  * 재사용 가능한 텍스트 영역 입력 필드 컴포넌트
@@ -33,7 +34,8 @@ export const FormTextArea = <
   placeholder,
   className,
   labelClassName,
-  textareaClassName
+  textareaClassName,
+  rows = 1
 }: FormTextAreaProps<TFieldValues, TName>) => {
   return (
     <FormField
@@ -47,6 +49,7 @@ export const FormTextArea = <
               {...field}
               className={cn(TEXTAREA_BASE_CLASS, textareaClassName)}
               placeholder={placeholder}
+              rows={rows}
             />
           </FormControl>
           <FormMessage />

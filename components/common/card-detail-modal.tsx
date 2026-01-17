@@ -61,6 +61,7 @@ const RecruitmentInfoForm = ({ control, labelClass }: RecruitmentInfoFormProps) 
       label="주요업무"
       labelClassName={labelClass}
       placeholder="(예시) 전사의 핵심 성과 지표를 정의하고 개선"
+      rows={1}
     />
 
     <FormTextArea
@@ -69,6 +70,7 @@ const RecruitmentInfoForm = ({ control, labelClass }: RecruitmentInfoFormProps) 
       label="자격요건"
       labelClassName={labelClass}
       placeholder="(예시) 다양한 조직과 협업하는 걸 좋아하시는 분"
+      rows={1}
     />
 
     <FormTextArea
@@ -77,6 +79,7 @@ const RecruitmentInfoForm = ({ control, labelClass }: RecruitmentInfoFormProps) 
       label="우대사항"
       labelClassName={labelClass}
       placeholder="(예시) 부서간 이해관계 조정했던 경험이 있으신 분"
+      rows={1}
     />
   </div>
 );
@@ -94,7 +97,7 @@ const PersonalMemoForm = ({ control, labelClass }: PersonalMemoFormProps) => (
       label="개인 메모"
       labelClassName={labelClass}
       placeholder="메모를 입력해주세요"
-      textareaClassName="h-[400px]"
+      rows={10}
     />
   </div>
 );
