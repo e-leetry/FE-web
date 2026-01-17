@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SidebarToggle } from "@/components/ui/sidebar-toggle";
+import { CardDetailModal } from "@/components/common/card-detail-modal";
 
 export default function HomePage() {
   const [payload, setPayload] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,11 +44,21 @@ export default function HomePage() {
         <Button asChild className="text-base font-semibold">
           <Link href="/login">로그인 화면으로 이동</Link>
         </Button>
+        <Button
+          variant="outline"
+          className="text-base font-semibold"
+          onClick={() => setIsModalOpen(true)}
+        >
+          상세 모달 열기
+        </Button>
         <SidebarToggle />
       </div>
+
+      <CardDetailModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <div className="rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-4 shadow-sm">
         <p className="text-sm text-slate-300">
-          Public routes stay accessible without a session cookie. Middleware will redirect everything else to
+          Public routes stay accessible without a session cookie. Middleware will redirect
+          everything else to
           <code className="ml-1 font-mono text-slate-200">/login</code>.
         </p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-400">
@@ -55,7 +67,10 @@ export default function HomePage() {
           <li>/auth/callback/[provider] — placeholder for backend hand-off</li>
         </ul>
       </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-4 shadow-sm">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4 rounded-lg border border-slate-800 bg-slate-900/40 px-4 py-4 shadow-sm"
+      >
         <div className="flex flex-col gap-2">
           <Label htmlFor="address-input" className="text-slate-200">
             주소를 입력해주세요
@@ -71,11 +86,19 @@ export default function HomePage() {
             입력한 값이 그대로 모의 POST 요청 payload로 전송됩니다.
           </p>
         </div>
-        <Button type="submit" disabled={!payload.trim() || status === "loading"} className="w-full justify-center text-base font-semibold">
+        <Button
+          type="submit"
+          disabled={!payload.trim() || status === "loading"}
+          className="w-full justify-center text-base font-semibold"
+        >
           {status === "loading" ? "요청 전송 중..." : "모의 요청 보내기"}
         </Button>
-        {status === "success" && <span className="text-sm font-medium text-emerald-300">요청에 성공했습니다.</span>}
-        {status === "error" && <span className="text-sm font-medium text-rose-300">요청에 실패했습니다.</span>}
+        {status === "success" && (
+          <span className="text-sm font-medium text-emerald-300">요청에 성공했습니다.</span>
+        )}
+        {status === "error" && (
+          <span className="text-sm font-medium text-rose-300">요청에 실패했습니다.</span>
+        )}
       </form>
     </section>
   );

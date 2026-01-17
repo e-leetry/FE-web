@@ -4,6 +4,30 @@ import { DimOverlay } from "@/components/ui/dim-overlay";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+import { FormDatePicker } from "./form-date-picker";
+import { FormTextArea } from "./form-text-area";
+import { FormInput } from "./form-input";
+
+const cardDetailSchema = z.object({
+  process: z.string().min(1, "채용과정을 입력해주세요"),
+  deadline: z.string().min(1, "마감일을 선택해주세요"),
+  mainTasks: z.string().optional(),
+  qualifications: z.string().optional(),
+  preferences: z.string().optional()
+});
+
+type CardDetailValues = z.infer<typeof cardDetailSchema>;
 
 interface CardDetailModalProps {
   isOpen: boolean;
@@ -15,6 +39,22 @@ interface CardDetailModalProps {
  */
 export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
+
+  const form = useForm<CardDetailValues>({
+    resolver: zodResolver(cardDetailSchema),
+    defaultValues: {
+      process: "",
+      deadline: "",
+      mainTasks: "",
+      qualifications: "",
+      preferences: ""
+    }
+  });
+
+  const onSubmit = (values: CardDetailValues) => {
+    // API 요청 로직이 들어갈 자리
+    console.log("폼 제출 데이터:", values);
+  };
 
   if (!isOpen) return null;
 
@@ -34,8 +74,6 @@ export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
   const inactiveNavItemClass = "text-[#727272] hover:bg-[#F3F3F3]/50";
 
   const labelClass = "text-[16px] font-bold text-[#282828] mb-3 block";
-  const inputBaseClass =
-    "w-full p-4 border border-[#EEEEEE] rounded-[12px] text-[#282828] text-[15px] bg-white placeholder:text-[#BDBDBD] focus:outline-none focus:border-[#282828] transition-colors";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -134,107 +172,96 @@ export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
 
         {/* 오른쪽 콘텐츠 영역 */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 p-10 overflow-y-auto">
-            {/* 타이틀 영역 */}
-            <div className="mb-10">
-              <h2 className="text-[32px] font-bold text-[#282828]">엔카닷컴</h2>
-            </div>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="flex-1 flex flex-col overflow-hidden"
+            >
+              <div className="flex-1 p-10 overflow-y-auto">
+                {/* 타이틀 영역 */}
+                <div className="mb-10">
+                  <h2 className="text-[32px] font-bold text-[#282828]">엔카닷컴</h2>
+                </div>
 
-            {/* 폼 영역 (이미지 기준 레이아웃 수정) */}
-            <div className="flex flex-col gap-8">
-              {/* 채용과정 & 마감일 한 줄 배치 */}
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className={labelClass}>채용과정</label>
-                  <input
-                    type="text"
-                    className={inputBaseClass}
-                    placeholder="(예시) 서류제출 -> 1차합격 -> 2차합격 -> 최종합격"
+                {/* 폼 영역 (이미지 기준 레이아웃 수정) */}
+                <div className="flex flex-col gap-8">
+                  {/* 채용과정 & 마감일 한 줄 배치 */}
+                  <div className="flex gap-4">
+                    <FormInput
+                      control={form.control}
+                      name="process"
+                      label="채용과정"
+                      className="flex-1"
+                      labelClassName={labelClass}
+                      placeholder="(예시) 서류제출 -> 1차합격 -> 2차합격 -> 최종합격"
+                    />
+                    <FormDatePicker
+                      control={form.control}
+                      name="deadline"
+                      label="마감일"
+                      labelClassName={labelClass}
+                    />
+                  </div>
+
+                  {/* 주요업무 */}
+                  <FormTextArea
+                    control={form.control}
+                    name="mainTasks"
+                    label="주요업무"
+                    labelClassName={labelClass}
+                    placeholder="(예시) 전사의 핵심 성과 지표를 정의하고 개선"
+                  />
+
+                  {/* 자격요건 */}
+                  <FormTextArea
+                    control={form.control}
+                    name="qualifications"
+                    label="자격요건"
+                    labelClassName={labelClass}
+                    placeholder="(예시) 다양한 조직과 협업하는 걸 좋아하시는 분"
+                  />
+
+                  {/* 우대사항 */}
+                  <FormTextArea
+                    control={form.control}
+                    name="preferences"
+                    label="우대사항"
+                    labelClassName={labelClass}
+                    placeholder="(예시) 부서간 이해관계 조정했던 경험이 있으신 분"
                   />
                 </div>
-                <div className="w-[300px]">
-                  <label className={labelClass}>마감일</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className={cn(inputBaseClass, "pr-10 cursor-pointer")}
-                      placeholder="날짜를 선택해주세요"
-                      readOnly
-                    />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M6 9L12 15L18 9"
-                          stroke="#727272"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
-                  </div>
+              </div>
+
+              {/* 하단 액션 영역 (이미지 기준 추가) */}
+              <div className="p-6 px-10 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+                <div className="flex items-center gap-2 text-[#727272] text-[15px]">
+                  <Image
+                    src="/images/dashboard/ico_loading.svg"
+                    alt="loading"
+                    width={20}
+                    height={20}
+                    className="animate-spin"
+                  />
+                  <span>공고 불러오는 중</span>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-8 py-4 bg-[#F3F3F3] text-[#282828] font-bold rounded-[12px] hover:bg-[#EAEAEA] transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-8 py-4 bg-[#282828] text-white font-bold rounded-[12px] hover:bg-[#000000] transition-colors"
+                  >
+                    저장하기
+                  </button>
                 </div>
               </div>
-
-              {/* 주요업무 */}
-              <div>
-                <label className={labelClass}>주요업무</label>
-                <textarea
-                  className={cn(inputBaseClass, "h-[100px] resize-none")}
-                  placeholder="(예시) 전사의 핵심 성과 지표를 정의하고 개선"
-                />
-              </div>
-
-              {/* 자격요건 */}
-              <div>
-                <label className={labelClass}>자격요건</label>
-                <textarea
-                  className={cn(inputBaseClass, "h-[100px] resize-none")}
-                  placeholder="(예시) 다양한 조직과 협업하는 걸 좋아하시는 분"
-                />
-              </div>
-
-              {/* 우대사항 */}
-              <div>
-                <label className={labelClass}>우대사항</label>
-                <textarea
-                  className={cn(inputBaseClass, "h-[100px] resize-none")}
-                  placeholder="(예시) 부서간 이해관계 조정했던 경험이 있으신 분"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 하단 액션 영역 (이미지 기준 추가) */}
-          <div className="p-6 px-10 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
-            <div className="flex items-center gap-2 text-[#727272] text-[15px]">
-              <Image
-                src="/images/dashboard/ico_loading.svg"
-                alt="loading"
-                width={20}
-                height={20}
-                className="animate-spin"
-              />
-              <span>공고 불러오는 중</span>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="px-8 py-4 bg-[#F3F3F3] text-[#282828] font-bold rounded-[12px] hover:bg-[#EAEAEA] transition-colors"
-              >
-                닫기
-              </button>
-              <button className="px-8 py-4 bg-[#282828] text-white font-bold rounded-[12px] hover:bg-black transition-colors">
-                저장하기
-              </button>
-            </div>
-          </div>
+            </form>
+          </Form>
         </div>
       </div>
     </div>
