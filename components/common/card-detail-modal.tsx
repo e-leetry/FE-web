@@ -11,6 +11,8 @@ import { FormTextArea } from "./form-text-area";
 import { BaseModal } from "./base-modal";
 import { FormInput } from "@/components/common/form-input";
 import { Button } from "@/components/ui/button";
+import { useCreate } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
+import { JobPostingSummaryCreateRequestPlatform } from "@/lib/api/generated/model";
 
 const cardDetailSchema = z.object({
   companyName: z.string().min(1, "기업명을 입력해주세요"),
@@ -142,13 +144,15 @@ interface CardDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  dashboardId?: number;
 }
 
 /**
  * Figma 노드 325:6614를 기반으로 재구현한 카드 상세 모달 컴포넌트
  */
-export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
+export const CardDetailModal = ({ isOpen, onClose, dashboardId }: CardDetailModalProps) => {
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
+  const { mutate: createSummary, isPending: isCreating } = useCreate();
 
   const form = useForm<CardDetailValues>({
     resolver: zodResolver(cardDetailSchema),
@@ -173,8 +177,32 @@ export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
   }, [isOpen, form.reset]);
 
   const onSubmit = (values: CardDetailValues) => {
-    // API 요청 로직이 들어갈 자리
-    console.log("폼 제출 데이터:", values);
+    const contentJson = JSON.stringify({
+      process: values.process,
+      mainTasks: values.mainTasks,
+      qualifications: values.qualifications,
+      preferences: values.preferences,
+    });
+
+    createSummary({
+      data: {
+        dashboardId: dashboardId,
+        title: values.jobTitle,
+        companyName: values.companyName,
+        url: values.jobUrl,
+        deadline: values.deadline,
+        platform: JobPostingSummaryCreateRequestPlatform.UNKNOWN,
+        contentJson: contentJson,
+        memo: values.memo,
+      }
+    }, {
+      onSuccess: () => {
+        handleClose();
+      },
+      onError: (error) => {
+        console.error("채용 공고 요약 등록 실패:", error);
+      }
+    });
   };
 
   if (!isOpen) return null;
@@ -185,7 +213,7 @@ export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
   };
 
   const labelClass = "text-[16px] font-bold text-[#727272] mb-[12px] block";
-  const actionButtonClass = "px-8 py-4 font-bold rounded-[12px] transition-colors";
+  const actionButtonClass = "flex-1 sm:flex-none sm:w-[120px] h-[56px] text-[16px] md:text-[18px] font-medium rounded-[16px] transition-colors";
 
   const navItemBaseClass =
     "flex flex-col items-center justify-center w-[72px] h-[72px] rounded-[12px] cursor-pointer transition-colors gap-1";
@@ -243,38 +271,31 @@ export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
         </>
       }
       footer={
-        <>
-          <div className="flex items-center gap-2 text-[#727272] text-[15px]">
-            <Image
-              src="/images/dashboard/ico_loading.svg"
-              alt="loading"
-              width={20}
-              height={20}
-              className="animate-spin"
-            />
-            <span>공고 불러오는 중</span>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="soft"
-              color="dark"
-              onClick={handleClose}
-              className={cn(actionButtonClass, "bg-[#F3F3F3] border-none text-[#282828] hover:bg-[#E9E9E9]")}
-            >
-              닫기
-            </Button>
-            <Button
-              type="submit"
-              variant="solid"
-              color="dark"
-              form="card-detail-form"
-              className={cn(actionButtonClass, "bg-[#282828] text-white hover:bg-[#3f3f3f]")}
-            >
-              저장하기
-            </Button>
-          </div>
-        </>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            type="button"
+            variant="soft"
+            color="dark"
+            disabled={isCreating}
+            onClick={handleClose}
+            className={cn(actionButtonClass, "bg-[#F1F1F1] border-none text-[#727272] hover:bg-[#E9E9E9]")}
+          >
+            닫기
+          </Button>
+          <Button
+            type="submit"
+            variant="solid"
+            color="dark"
+            disabled={isCreating}
+            form="card-detail-form"
+            className={cn(
+              actionButtonClass,
+              "bg-[#282828] text-white hover:bg-[#3f3f3f] disabled:bg-[#F1F1F1] disabled:text-[#AAAAAA]"
+            )}
+          >
+            {isCreating ? "저장 중..." : "저장하기"}
+          </Button>
+        </div>
       }
     >
       <Form {...form}>

@@ -15,7 +15,6 @@ import type {
 
 import { customInstance } from '../../custom-instance';
 import type { ErrorType } from '../../custom-instance';
-import type { DashboardResponse } from '../model/dashboardResponse';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -23,7 +22,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * 로그인한 사용자의 대시보드 목록을 정렬 순서대로 조회합니다.
+ * 로그인한 사용자의 대시보드 목록을 정렬 순서대로 조회하며, 각 대시보드에 속한 채용 공고 요약 목록을 포함합니다.
  * @summary 대시보드 목록 조회
  */
 export const getDashboards = (
@@ -32,9 +31,9 @@ export const getDashboards = (
 ) => {
       
       
-      return customInstance<DashboardResponse[]>(
+      return customInstance<Blob>(
       {url: `/api/v1/dashboards`, method: 'GET',
-        signal
+        responseType: 'blob', signal
     },
       options);
     }

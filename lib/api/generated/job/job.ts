@@ -9,8 +9,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  JobSummarizeRequest,
-  JobSummaryResponse
+  JobSummarizeRequest
 } from '.././model';
 
 import { customInstance } from '../../custom-instance';
@@ -31,11 +30,11 @@ export const summarize = (
 ) => {
       
       
-      return customInstance<JobSummaryResponse>(
+      return customInstance<Blob>(
       {url: `/api/v1/jobs/summarize`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: jobSummarizeRequest,
-        signal
+        responseType: 'blob', signal
     },
       options);
     }

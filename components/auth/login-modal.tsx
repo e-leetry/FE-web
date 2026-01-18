@@ -21,12 +21,12 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Background Dim & Blur */}
       <DimOverlay onClick={onClose} />
 
       {/* Modal Card */}
-      <div className="relative z-10 flex w-[400px] flex-col items-center gap-8 rounded-[24px] border border-[#FAFAFA]/10 bg-[#FAFAFA] p-10 px-6 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.05)]">
+      <div className="relative z-10 flex w-full max-w-[400px] flex-col items-center gap-8 rounded-[24px] border border-[#FAFAFA]/10 bg-[#FAFAFA] p-10 px-6 shadow-[0px_2px_8px_0px_rgba(0,0,0,0.05)]">
         <div className="flex flex-col items-center gap-4">
           <div className="relative h-12 w-[160px]">
             <Image

@@ -29,9 +29,9 @@ import {
 
 interface Job {
   id: number;
-  company: string;
+  companyName: string;
   type?: "white" | "loading" | "add";
-  position?: string;
+  title?: string;
   deadline?: string;
 }
 
@@ -45,12 +45,12 @@ const INITIAL_COLUMNS: Column[] = [
   {
     id: "interest",
     title: "관심공고",
-    jobs: [{ id: 1, company: "엔카닷컴", type: "loading" }]
+    jobs: [{ id: 1, companyName: "엔카닷컴", type: "loading" }]
   },
   {
     id: "applied",
     title: "서류제출",
-    jobs: [{ id: 2, company: "네이버", position: "Product Designer", deadline: "25. 10. 19" }]
+    jobs: [{ id: 2, companyName: "네이버", title: "Product Designer", deadline: "25. 10. 19" }]
   },
   {
     id: "interview1",
@@ -69,7 +69,7 @@ const INITIAL_COLUMNS: Column[] = [
   }
 ];
 
-function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardClick: (job: Job) => void }) {
+function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardClick: (job: Job, columnId: string) => void }) {
   const { setNodeRef } = useDroppable({
     id: column.id,
   });
@@ -91,13 +91,13 @@ function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardC
               key={job.id}
               id={job.id}
               type={job.type || "white"}
-              company={job.company}
-              position={job.position}
+              companyName={job.companyName}
+              title={job.title}
               deadline={job.deadline}
-              onClick={() => handleCardClick(job)}
+              onClick={() => handleCardClick(job, column.id)}
             />
           ))}
-          <JobCard type="add" onClick={() => handleCardClick({ id: Date.now(), company: "새 채용공고" })} />
+          <JobCard type="add" onClick={() => handleCardClick({ id: Date.now(), companyName: "" }, column.id)} />
         </div>
       </SortableContext>
     </div>
@@ -124,7 +124,12 @@ export default function DashboardPage() {
       const mappedColumns: Column[] = dashboardsData.map((dashboard) => ({
         id: dashboard.id.toString(),
         title: dashboard.label,
-        jobs: [], // API 응답에 jobs가 없으므로 일단 빈 배열로 설정
+        jobs: (dashboard.jobPostings || []).map((jp, index) => ({
+          id: index, // 임시 ID (API에서 ID를 제공하지 않음)
+          companyName: jp.companyName,
+          title: jp.title,
+          deadline: jp.deadline,
+        })),
       }));
       setColumns(mappedColumns);
     } else if (!isLoggedIn) {
@@ -134,6 +139,7 @@ export default function DashboardPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedDashboardId, setSelectedDashboardId] = useState<number | undefined>(undefined);
   const [activeId, setActiveId] = useState<number | null>(null);
 
   const sensors = useSensors(
@@ -231,14 +237,16 @@ export default function DashboardPage() {
     setActiveId(null);
   };
 
-  const handleCardClick = (job: Job) => {
+  const handleCardClick = (job: Job, columnId: string) => {
     setSelectedJob(job);
+    setSelectedDashboardId(Number(columnId));
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedJob(null);
+    setSelectedDashboardId(undefined);
   };
 
   const activeJob = activeId 
@@ -258,13 +266,13 @@ export default function DashboardPage() {
                     key={job.id}
                     id={job.id}
                     type={job.type || "white"}
-                    company={job.company}
-                    position={job.position}
+                    companyName={job.companyName}
+                    title={job.title}
                     deadline={job.deadline}
-                    onClick={() => handleCardClick(job)}
+                    onClick={() => handleCardClick(job, column.id)}
                   />
                 ))}
-                <JobCard type="add" onClick={() => handleCardClick({ id: Date.now(), company: "새 채용공고" })} />
+                <JobCard type="add" onClick={() => handleCardClick({ id: Date.now(), companyName: "" }, column.id)} />
               </div>
             </div>,
             ...(index < columns.length - 1
@@ -321,8 +329,8 @@ export default function DashboardPage() {
             <JobCard
               id={activeJob.id}
               type={activeJob.type || "white"}
-              company={activeJob.company}
-              position={activeJob.position}
+              companyName={activeJob.companyName}
+              title={activeJob.title}
               deadline={activeJob.deadline}
             />
           ) : null}
@@ -332,6 +340,7 @@ export default function DashboardPage() {
       <CardDetailModal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
+        dashboardId={selectedDashboardId}
       />
     </div>
   );

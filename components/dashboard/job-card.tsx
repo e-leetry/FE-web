@@ -10,8 +10,8 @@ import { CSS } from "@dnd-kit/utilities";
 interface JobCardProps {
   id?: string | number;
   type?: "white" | "loading" | "add";
-  company?: string;
-  position?: string;
+  companyName?: string;
+  title?: string;
   deadline?: string;
   className?: string;
   onClick?: () => void;
@@ -20,8 +20,8 @@ interface JobCardProps {
 export function JobCard({
   id,
   type = "white",
-  company,
-  position,
+  companyName,
+  title,
   deadline,
   className,
   onClick
@@ -73,10 +73,10 @@ export function JobCard({
       >
         <div className="flex flex-col gap-[8px]">
           <span className="text-[16px] font-[600] leading-[24px] tracking-[-0.32px] text-[#343E4C]">
-            {company}
+            {companyName}
           </span>
           <span className="text-[13px] font-[500] leading-[15.52px] tracking-[-0.26px] text-[#343E4C]">
-            {company}
+            {companyName}
           </span>
         </div>
         <div className="flex items-center gap-[4px]">
@@ -106,10 +106,10 @@ export function JobCard({
     >
       <div className="flex flex-col gap-[8px]">
         <span className="text-[16px] font-[600] leading-[24px] tracking-[-0.32px] text-[#343E4C]">
-          {company}
+          {companyName}
         </span>
         <span className="text-[13px] font-[600] leading-[15.52px] tracking-[-0.26px] text-[#343E4C]">
-          {position}
+          {title}
         </span>
       </div>
       <div className="text-[14px] font-[400] leading-[16.71px] tracking-[-0.28px] text-[#343E4C]">

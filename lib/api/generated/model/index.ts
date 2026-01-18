@@ -8,6 +8,8 @@ export * from './apiResponseUnit';
 export * from './dashboardResponse';
 export * from './jobPostingSummaryCreateRequest';
 export * from './jobPostingSummaryCreateRequestPlatform';
+export * from './jobPostingSummaryMoveRequest';
+export * from './jobPostingSummaryResponse';
 export * from './jobPostingSummaryUpdateRequest';
 export * from './jobPostingSummaryUpdateRequestPlatform';
 export * from './jobSummarizeRequest';
