@@ -4,7 +4,11 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 interface JobCardProps {
+  id?: string | number;
   type?: "white" | "loading" | "add";
   company?: string;
   position?: string;
@@ -14,6 +18,7 @@ interface JobCardProps {
 }
 
 export function JobCard({
+  id,
   type = "white",
   company,
   position,
@@ -21,12 +26,27 @@ export function JobCard({
   className,
   onClick
 }: JobCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: id || "" });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   if (type === "add") {
     return (
       <Card
         onClick={onClick}
         className={cn(
-          "flex h-[144px] w-[180px] cursor-pointer flex-row items-center justify-center gap-2 rounded-[16px] border-dashed border-[#D1D5DB] bg-transparent p-[20px] shadow-none hover:bg-slate-50 min-[1440px]:w-[236px]",
+          "flex h-[144px] w-[180px] shrink-0 cursor-pointer flex-row items-center justify-center gap-2 rounded-[16px] border-dashed border-[#D1D5DB] bg-transparent p-[20px] shadow-none hover:bg-slate-50 min-[1440px]:w-[236px]",
           className
         )}
       >
@@ -41,9 +61,13 @@ export function JobCard({
   if (type === "loading") {
     return (
       <Card
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
         onClick={onClick}
         className={cn(
-          "flex h-[144px] w-[180px] cursor-pointer flex-col justify-between rounded-[16px] bg-white p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)] min-[1440px]:w-[236px]",
+          "flex h-[144px] w-[180px] shrink-0 cursor-pointer flex-col justify-between rounded-[16px] bg-white p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)] min-[1440px]:w-[236px]",
           className
         )}
       >
@@ -70,9 +94,13 @@ export function JobCard({
 
   return (
     <Card
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
       onClick={onClick}
       className={cn(
-        "flex h-[144px] w-[180px] cursor-pointer flex-col justify-between rounded-[16px] bg-[#FAFAFA] p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)] min-[1440px]:w-[236px]",
+        "flex h-[144px] w-[180px] shrink-0 cursor-pointer flex-col justify-between rounded-[16px] bg-[#FAFAFA] p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)] min-[1440px]:w-[236px]",
         className
       )}
     >
