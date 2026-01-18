@@ -33,7 +33,7 @@ export function JobCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: id || "" });
+  } = useSortable({ id: id ?? "" });
 
   const style = {
     transform: CSS.Translate.toString(transform),

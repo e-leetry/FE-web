@@ -12,12 +12,12 @@ export interface JobPostingSummaryUpdateRequest {
   url?: string;
   /** 공고 내용 JSON */
   contentJson?: string;
-  /** 메모 */
-  memo?: string;
   /** 마감일 */
   deadline?: string;
   /** 수집 일시 */
   crawledAt?: string;
   /** 플랫폼 */
   platform: JobPostingSummaryUpdateRequestPlatform;
+  /** 메모 */
+  memo?: string;
 }
