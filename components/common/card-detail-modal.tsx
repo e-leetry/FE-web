@@ -111,12 +111,13 @@ const PersonalMemoForm = ({ control, labelClass }: PersonalMemoFormProps) => (
 interface CardDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
+  title?: string;
 }
 
 /**
  * Figma 노드 325:6614를 기반으로 재구현한 카드 상세 모달 컴포넌트
  */
-export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
+export const CardDetailModal = ({ isOpen, onClose, title = "엔카닷컴" }: CardDetailModalProps) => {
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
 
   const form = useForm<CardDetailValues>({
@@ -160,7 +161,7 @@ export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="엔카닷컴"
+      title={title}
       sidebar={
         <>
           <div

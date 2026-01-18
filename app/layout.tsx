@@ -9,7 +9,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Reetry Frontend",
+    default: "리트",
     template: "%s · Reetry"
   },
   description: "Next.js 16 web shell for the Reetry platform",

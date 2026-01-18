@@ -95,7 +95,7 @@ function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardC
               onClick={() => handleCardClick(job)}
             />
           ))}
-          <JobCard type="add" />
+          <JobCard type="add" onClick={() => handleCardClick({ id: Date.now(), company: "새 채용공고" })} />
         </div>
       </SortableContext>
     </div>
@@ -265,7 +265,11 @@ export default function DashboardPage() {
         </DragOverlay>
       </DndContext>
 
-      <CardDetailModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      <CardDetailModal 
+        isOpen={isModalOpen} 
+        onClose={handleCloseModal} 
+        title={selectedJob?.company || "채용공고 상세"}
+      />
     </div>
   );
 }
