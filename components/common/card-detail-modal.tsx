@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,6 +13,9 @@ import { FormInput } from "@/components/common/form-input";
 import { Button } from "@/components/ui/button";
 
 const cardDetailSchema = z.object({
+  companyName: z.string().min(1, "기업명을 입력해주세요"),
+  jobTitle: z.string().min(1, "직무명을 입력해주세요"),
+  jobUrl: z.string().url("올바른 URL 형식이 아닙니다").or(z.literal("")),
   process: z.string().min(1, "채용과정을 입력해주세요"),
   deadline: z.string().min(1, "마감일을 입력해주세요"),
   mainTasks: z.string().optional(),
@@ -30,13 +33,40 @@ interface RecruitmentInfoFormProps {
 }
 
 const RecruitmentInfoForm = ({ control, setValue, labelClass }: RecruitmentInfoFormProps) => (
-  <div className="flex flex-col gap-8">
+  <div className="flex flex-col gap-6">
+    <div className="flex gap-4">
+      <FormInput
+        control={control}
+        name="companyName"
+        label="기업명"
+        className="flex-1"
+        labelClassName={labelClass}
+        placeholder="기업명을 입력해요"
+      />
+      <FormInput
+        control={control}
+        name="jobTitle"
+        label="직무명"
+        className="flex-1"
+        labelClassName={labelClass}
+        placeholder="지원하는 직무를 입력해요"
+      />
+    </div>
+
+    <FormInput
+      control={control}
+      name="jobUrl"
+      label="채용링크"
+      labelClassName={labelClass}
+      placeholder="원티드, 잡코리아 등 채용공고 주소를 입력해요"
+    />
+
     <div className="flex gap-4">
       <FormInput
         control={control}
         name="process"
         label="채용과정"
-        className="flex-1"
+        className="flex-[2]"
         labelClassName={labelClass}
         placeholder="(예시) 서류제출 -> 1차합격 -> 2차합격 -> 최종합격"
       />
@@ -96,7 +126,7 @@ interface PersonalMemoFormProps {
 }
 
 const PersonalMemoForm = ({ control, labelClass }: PersonalMemoFormProps) => (
-  <div className="flex flex-col gap-8">
+  <div className="flex flex-col gap-6">
     <FormTextArea
       control={control}
       name="memo"
@@ -117,12 +147,15 @@ interface CardDetailModalProps {
 /**
  * Figma 노드 325:6614를 기반으로 재구현한 카드 상세 모달 컴포넌트
  */
-export const CardDetailModal = ({ isOpen, onClose, title = "엔카닷컴" }: CardDetailModalProps) => {
+export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
 
   const form = useForm<CardDetailValues>({
     resolver: zodResolver(cardDetailSchema),
     defaultValues: {
+      companyName: "",
+      jobTitle: "",
+      jobUrl: "",
       process: "",
       deadline: "",
       mainTasks: "",
@@ -132,6 +165,13 @@ export const CardDetailModal = ({ isOpen, onClose, title = "엔카닷컴" }: Car
     }
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      form.reset();
+      setActiveTab("info");
+    }
+  }, [isOpen, form.reset]);
+
   const onSubmit = (values: CardDetailValues) => {
     // API 요청 로직이 들어갈 자리
     console.log("폼 제출 데이터:", values);
@@ -139,29 +179,24 @@ export const CardDetailModal = ({ isOpen, onClose, title = "엔카닷컴" }: Car
 
   if (!isOpen) return null;
 
-  // 공통 CSS 클래스 및 스타일 추출 (가이드라인 준수)
-  const colors = {
-    primary: "#282828",
-    secondary: "#727272",
-    border: "#EEEEEE",
-    bgLight: "#FAFAFA",
-    bgActive: "#F3F3F3",
-    placeholder: "#BDBDBD"
+  const handleClose = () => {
+    form.reset();
+    onClose();
   };
+
+  const labelClass = "text-[16px] font-bold text-[#727272] mb-[12px] block";
+  const actionButtonClass = "px-8 py-4 font-bold rounded-[12px] transition-colors";
 
   const navItemBaseClass =
     "flex flex-col items-center justify-center w-[72px] h-[72px] rounded-[12px] cursor-pointer transition-colors gap-1";
   const activeNavItemClass = "bg-[#F3F3F3] text-[#282828] font-bold";
   const inactiveNavItemClass = "text-[#727272] hover:bg-[#F3F3F3]/50";
 
-  const labelClass = "text-[16px] font-bold text-[#282828] mb-3 block";
-  const actionButtonClass = "px-8 py-4 font-bold rounded-[12px] transition-colors";
-
   return (
     <BaseModal
       isOpen={isOpen}
-      onClose={onClose}
-      title={title}
+      onClose={handleClose}
+      title=""
       sidebar={
         <>
           <div
@@ -224,17 +259,17 @@ export const CardDetailModal = ({ isOpen, onClose, title = "엔카닷컴" }: Car
               type="button"
               variant="soft"
               color="dark"
-              onClick={onClose}
-              className={actionButtonClass}
+              onClick={handleClose}
+              className={cn(actionButtonClass, "bg-[#F3F3F3] border-none text-[#282828] hover:bg-[#E9E9E9]")}
             >
-              취소
+              닫기
             </Button>
             <Button
               type="submit"
               variant="solid"
               color="dark"
               form="card-detail-form"
-              className={actionButtonClass}
+              className={cn(actionButtonClass, "bg-[#282828] text-white hover:bg-[#3f3f3f]")}
             >
               저장하기
             </Button>
@@ -251,7 +286,12 @@ export const CardDetailModal = ({ isOpen, onClose, title = "엔카닷컴" }: Car
           {activeTab === "info" ? (
             <RecruitmentInfoForm control={form.control} setValue={form.setValue} labelClass={labelClass} />
           ) : (
-            <PersonalMemoForm control={form.control} labelClass={labelClass} />
+            <>
+              <div className="text-[32px] font-bold text-[#282828] mb-10">
+                {form.watch("companyName") || "기업명"}
+              </div>
+              <PersonalMemoForm control={form.control} labelClass={labelClass} />
+            </>
           )}
         </form>
       </Form>

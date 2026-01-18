@@ -44,7 +44,7 @@ export const FormInput = <
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={className}>
+        <FormItem className={cn("space-y-0", className)}>
           <FormLabel className={labelClassName}>{label}</FormLabel>
           <FormControl>
             <input

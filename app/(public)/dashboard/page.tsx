@@ -332,7 +332,6 @@ export default function DashboardPage() {
       <CardDetailModal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
-        title={selectedJob?.company || "채용공고 상세"}
       />
     </div>
   );

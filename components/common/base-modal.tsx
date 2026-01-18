@@ -2,7 +2,7 @@
 
 import { DimOverlay } from "@/components/ui/dim-overlay";
 import { cn } from "@/lib/utils";
-import React from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 /**
  * 모달 베이스 컴포넌트 Props
@@ -39,6 +39,28 @@ export const BaseModal = ({
   height = "720px",
   className
 }: BaseModalProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollRef.current) {
+        setIsScrolled(scrollRef.current.scrollTop > 0);
+      }
+    };
+
+    const currentRef = scrollRef.current;
+    if (currentRef) {
+      currentRef.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+      if (currentRef) {
+        currentRef.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   // 공통 스타일 클래스 추출
@@ -66,9 +88,9 @@ export const BaseModal = ({
         )}
 
         {/* 메인 콘텐츠 영역 */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* 스크롤 가능한 콘텐츠 */}
-          <div className="flex-1 p-10 overflow-y-auto">
+          <div ref={scrollRef} className="flex-1 p-10 overflow-y-auto">
             {/* 제목 영역 */}
             <div className="mb-10">
               {typeof title === "string" ? (
@@ -80,11 +102,20 @@ export const BaseModal = ({
 
             {/* 내용 */}
             {children}
+            {/* 하단 여백 확보 (푸터가 콘텐츠를 가리지 않게) */}
+            {footer && <div className="h-20" />}
           </div>
 
           {/* 하단 푸터 영역 (존재할 경우에만 렌더링) */}
           {footer && (
-            <div className="p-6 px-10 border-t border-[#EEEEEE] flex items-center justify-between bg-white">
+            <div
+              className={cn(
+                "absolute bottom-0 left-0 right-0 p-6 px-10 flex items-center justify-between transition-all duration-300",
+                isScrolled
+                  ? "bg-white/80 backdrop-blur-md border-t border-[#EEEEEE]/50"
+                  : "bg-white border-t border-[#EEEEEE]"
+              )}
+            >
               {footer}
             </div>
           )}
