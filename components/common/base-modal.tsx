@@ -65,24 +65,29 @@ export const BaseModal = ({
 
   // 공통 스타일 클래스 추출
   const modalContainerClass = cn(
-    "relative z-10 flex bg-white rounded-[32px] overflow-hidden shadow-[0px_20px_40px_rgba(0,0,0,0.1)]",
+    "relative z-10 flex bg-white rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0px_20px_40px_rgba(0,0,0,0.1)]",
     className
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6">
       {/* 배경 딤 처리 및 클릭 시 닫기 */}
       <DimOverlay onClick={onClose} position="fixed" />
 
       {/* 모달 본체 */}
       <div
         className={modalContainerClass}
-        style={{ width, height }}
+        style={{ 
+          width: "100%", 
+          height: "100%", 
+          maxWidth: width, 
+          maxHeight: height 
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* 왼쪽 사이드바 영역 (존재할 경우에만 렌더링) */}
         {sidebar && (
-          <div className="w-[104px] bg-[#FAFAFA] border-r border-[#EEEEEE] flex flex-col items-center py-8 gap-4">
+          <div className="hidden sm:flex w-[104px] bg-[#FAFAFA] border-r border-[#EEEEEE] flex-col items-center py-8 gap-4">
             {sidebar}
           </div>
         )}
@@ -90,11 +95,11 @@ export const BaseModal = ({
         {/* 메인 콘텐츠 영역 */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* 스크롤 가능한 콘텐츠 */}
-          <div ref={scrollRef} className="flex-1 p-10 overflow-y-auto">
+          <div ref={scrollRef} className="flex-1 p-6 md:p-10 overflow-y-auto">
             {/* 제목 영역 */}
-            <div className="mb-10">
+            <div className="mb-6 md:mb-10">
               {typeof title === "string" ? (
-                <h2 className="text-[32px] font-bold text-[#282828]">{title}</h2>
+                <h2 className="text-[24px] md:text-[32px] font-bold text-[#282828]">{title}</h2>
               ) : (
                 title
               )}
@@ -110,10 +115,8 @@ export const BaseModal = ({
           {footer && (
             <div
               className={cn(
-                "absolute bottom-0 left-0 right-0 p-6 px-10 flex items-center justify-between transition-all duration-300",
-                isScrolled
-                  ? "bg-white/80 backdrop-blur-md border-t border-[#EEEEEE]/50"
-                  : "bg-white border-t border-[#EEEEEE]"
+                "absolute bottom-0 left-0 right-0 px-6 md:px-[48px] pb-6 md:pb-[32px] pt-10 flex items-center justify-end",
+                "bg-gradient-to-t from-white from-[57%] to-transparent"
               )}
             >
               {footer}
