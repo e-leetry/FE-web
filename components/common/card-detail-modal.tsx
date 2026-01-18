@@ -6,15 +6,14 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Form } from "@/components/ui/form";
-import { FormDatePicker } from "./form-date-picker";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { FormTextArea } from "./form-text-area";
 import { BaseModal } from "./base-modal";
 import { FormInput } from "@/components/common/form-input";
 
 const cardDetailSchema = z.object({
   process: z.string().min(1, "채용과정을 입력해주세요"),
-  deadline: z.string().min(1, "마감일을 선택해주세요"),
+  deadline: z.string().min(1, "마감일을 입력해주세요"),
   mainTasks: z.string().optional(),
   qualifications: z.string().optional(),
   preferences: z.string().optional(),
@@ -25,10 +24,11 @@ type CardDetailValues = z.infer<typeof cardDetailSchema>;
 
 interface RecruitmentInfoFormProps {
   control: any;
+  setValue: any;
   labelClass: string;
 }
 
-const RecruitmentInfoForm = ({ control, labelClass }: RecruitmentInfoFormProps) => (
+const RecruitmentInfoForm = ({ control, setValue, labelClass }: RecruitmentInfoFormProps) => (
   <div className="flex flex-col gap-8">
     <div className="flex gap-4">
       <FormInput
@@ -39,11 +39,24 @@ const RecruitmentInfoForm = ({ control, labelClass }: RecruitmentInfoFormProps) 
         labelClassName={labelClass}
         placeholder="(예시) 서류제출 -> 1차합격 -> 2차합격 -> 최종합격"
       />
-      <FormDatePicker
+      <FormInput
         control={control}
         name="deadline"
         label="마감일"
+        className="flex-1"
         labelClassName={labelClass}
+        placeholder="YYYY-MM-DD"
+        onChange={(e) => {
+          const value = e.target.value.replace(/[^0-9]/g, "");
+          let formattedValue = value;
+          if (value.length > 4) {
+            formattedValue = `${value.slice(0, 4)}-${value.slice(4)}`;
+          }
+          if (value.length > 6) {
+            formattedValue = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
+          }
+          setValue("deadline", formattedValue);
+        }}
       />
     </div>
 
@@ -230,7 +243,7 @@ export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
           className="flex flex-col"
         >
           {activeTab === "info" ? (
-            <RecruitmentInfoForm control={form.control} labelClass={labelClass} />
+            <RecruitmentInfoForm control={form.control} setValue={form.setValue} labelClass={labelClass} />
           ) : (
             <PersonalMemoForm control={form.control} labelClass={labelClass} />
           )}

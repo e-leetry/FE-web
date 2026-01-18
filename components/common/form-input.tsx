@@ -16,6 +16,7 @@ interface FormInputProps<
   className?: string;
   labelClassName?: string;
   inputClassName?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const INPUT_BASE_CLASS =
@@ -35,7 +36,8 @@ export const FormInput = <
   placeholder,
   className,
   labelClassName,
-  inputClassName
+  inputClassName,
+  onChange
 }: FormInputProps<TFieldValues, TName>) => {
   return (
     <FormField
@@ -50,6 +52,10 @@ export const FormInput = <
               type={type}
               className={cn(INPUT_BASE_CLASS, inputClassName)}
               placeholder={placeholder}
+              onChange={(e) => {
+                field.onChange(e);
+                onChange?.(e);
+              }}
             />
           </FormControl>
           <FormMessage />
