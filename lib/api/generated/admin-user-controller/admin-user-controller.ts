@@ -15,6 +15,7 @@ import type {
 
 import { customInstance } from '../../custom-instance';
 import type { ErrorType } from '../../custom-instance';
+import type { UserResponse } from '../model/userResponse';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -27,9 +28,9 @@ export const getAllUsers = (
 ) => {
       
       
-      return customInstance<Blob>(
+      return customInstance<UserResponse[]>(
       {url: `/api/v1/admin/users`, method: 'GET',
-        responseType: 'blob', signal
+        signal
     },
       options);
     }

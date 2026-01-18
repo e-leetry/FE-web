@@ -22,7 +22,8 @@ const paletteMeta: Record<ButtonColor, { label: string; description: string }> =
   secondary: { label: "Secondary", description: "중립적인 보조 액션과 UI 블록에 사용합니다." },
   info: { label: "Info", description: "정보성 알림이나 상태 배지를 표현합니다." },
   warning: { label: "Warning", description: "경고성 텍스트나 주의 버튼에 사용합니다." },
-  error: { label: "Error", description: "위험 동작과 오류 배지를 강조합니다." }
+  error: { label: "Error", description: "위험 동작과 오류 배지를 강조합니다." },
+  dark: { label: "Dark", description: "중립적인 어두운 배경의 버튼입니다." }
 };
 
 const semanticPalette: PaletteGroup[] = (

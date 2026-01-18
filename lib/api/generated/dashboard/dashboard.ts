@@ -15,6 +15,7 @@ import type {
 
 import { customInstance } from '../../custom-instance';
 import type { ErrorType } from '../../custom-instance';
+import type { DashboardResponse } from '../model/dashboardResponse';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -31,9 +32,9 @@ export const getDashboards = (
 ) => {
       
       
-      return customInstance<Blob>(
+      return customInstance<DashboardResponse[]>(
       {url: `/api/v1/dashboards`, method: 'GET',
-        responseType: 'blob', signal
+        signal
     },
       options);
     }

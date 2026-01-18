@@ -31,4 +31,5 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   timeout?: number;
   parseAs?: ParseAs;
+  signal?: AbortSignal;
 }

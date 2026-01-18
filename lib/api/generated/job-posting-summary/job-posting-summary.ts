@@ -31,11 +31,11 @@ export const create = (
 ) => {
       
       
-      return customInstance<Blob>(
+      return customInstance<number>(
       {url: `/api/v1/job-posting-summaries`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: jobPostingSummaryCreateRequest,
-        responseType: 'blob', signal
+        signal
     },
       options);
     }
@@ -97,11 +97,11 @@ export const update = (
 ) => {
       
       
-      return customInstance<Blob>(
+      return customInstance<void>(
       {url: `/api/v1/job-posting-summaries/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: jobPostingSummaryUpdateRequest,
-        responseType: 'blob', signal
+        signal
     },
       options);
     }

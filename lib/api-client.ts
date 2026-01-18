@@ -56,6 +56,11 @@ const apiFetch = async <T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+  // 외부에서 전달된 signal과 내부 타임아웃 signal 결합
+  if (options?.signal) {
+    options.signal.addEventListener('abort', () => controller.abort());
+  }
+
   // FormData인 경우 Content-Type 헤더 설정하지 않음 (브라우저가 자동 설정)
   const isFormData = body instanceof FormData;
   const requestHeaders: Record<string, string> = { ...headers };

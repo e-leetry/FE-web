@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
+import { useAuth } from "@/lib/auth/useAuth";
+import { useGetDashboards } from "@/lib/api/generated/dashboard/dashboard";
 import {
   DndContext,
   DragOverlay,
@@ -103,7 +105,33 @@ function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardC
 }
 
 export default function DashboardPage() {
+  const { isLoggedIn } = useAuth();
   const [columns, setColumns] = useState<Column[]>(INITIAL_COLUMNS);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const { data: dashboardsData } = useGetDashboards({
+    query: {
+      enabled: isLoggedIn,
+    }
+  });
+
+  useEffect(() => {
+    if (isLoggedIn && dashboardsData) {
+      const mappedColumns: Column[] = dashboardsData.map((dashboard) => ({
+        id: dashboard.id.toString(),
+        title: dashboard.label,
+        jobs: [], // API 응답에 jobs가 없으므로 일단 빈 배열로 설정
+      }));
+      setColumns(mappedColumns);
+    } else if (!isLoggedIn) {
+      setColumns(INITIAL_COLUMNS);
+    }
+  }, [isLoggedIn, dashboardsData]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -216,6 +244,42 @@ export default function DashboardPage() {
   const activeJob = activeId 
     ? columns.flatMap(col => col.jobs).find(job => job.id === activeId)
     : null;
+
+  if (!mounted) {
+    return (
+      <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
+        <div className="flex min-w-fit flex-1 gap-[20px] px-[80px] py-8 min-[1920px]:gap-[32px] min-[1920px]:px-[240px]">
+          {columns.flatMap((column, index) => [
+            <div key={column.id} className="flex min-w-[180px] flex-1 flex-col gap-[16px]">
+              <StatusHeader title={column.title} count={column.jobs.length} />
+              <div className="flex flex-1 flex-col gap-[16px] min-h-[200px]">
+                {column.jobs.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    id={job.id}
+                    type={job.type || "white"}
+                    company={job.company}
+                    position={job.position}
+                    deadline={job.deadline}
+                    onClick={() => handleCardClick(job)}
+                  />
+                ))}
+                <JobCard type="add" onClick={() => handleCardClick({ id: Date.now(), company: "새 채용공고" })} />
+              </div>
+            </div>,
+            ...(index < columns.length - 1
+              ? [
+                  <div
+                    key={`sep-${index}`}
+                    className="w-[1px] flex-shrink-0 self-stretch bg-[#E9E9E9]"
+                  />
+                ]
+              : [])
+          ])}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
