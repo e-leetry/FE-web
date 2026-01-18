@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { FormTextArea } from "./form-text-area";
 import { BaseModal } from "./base-modal";
 import { FormInput } from "@/components/common/form-input";
+import { Button } from "@/components/ui/button";
 
 const cardDetailSchema = z.object({
   process: z.string().min(1, "채용과정을 입력해주세요"),
@@ -218,20 +219,24 @@ export const CardDetailModal = ({ isOpen, onClose }: CardDetailModalProps) => {
             <span>공고 불러오는 중</span>
           </div>
           <div className="flex gap-3">
-            <button
+            <Button
               type="button"
+              variant="soft"
+              color="dark"
               onClick={onClose}
-              className={cn(actionButtonClass, "bg-[#F3F3F3] text-[#282828] hover:bg-[#EAEAEA]")}
+              className={actionButtonClass}
             >
               취소
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="solid"
+              color="dark"
               form="card-detail-form"
-              className={cn(actionButtonClass, "bg-[#282828] text-white hover:bg-[#000000]")}
+              className={actionButtonClass}
             >
               저장하기
-            </button>
+            </Button>
           </div>
         </>
       }

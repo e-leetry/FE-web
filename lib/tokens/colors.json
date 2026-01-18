@@ -169,6 +169,40 @@
         "hoverText": "#9F1239",
         "ring": "#FDA4AF"
       }
+    },
+    "dark": {
+      "solid": {
+        "background": "#282828",
+        "border": "transparent",
+        "text": "#FFFFFF",
+        "hoverBackground": "#000000",
+        "hoverText": "#FFFFFF",
+        "ring": "#727272"
+      },
+      "outlined": {
+        "background": "transparent",
+        "border": "#282828",
+        "text": "#282828",
+        "hoverBackground": "#F3F3F3",
+        "hoverText": "#282828",
+        "ring": "#727272"
+      },
+      "soft": {
+        "background": "#F3F3F3",
+        "border": "transparent",
+        "text": "#282828",
+        "hoverBackground": "#EAEAEA",
+        "hoverText": "#282828",
+        "ring": "#EEEEEE"
+      },
+      "text": {
+        "background": "transparent",
+        "border": "transparent",
+        "text": "#282828",
+        "hoverBackground": "#F3F3F3",
+        "hoverText": "#282828",
+        "ring": "#EEEEEE"
+      }
     }
   }
 }
