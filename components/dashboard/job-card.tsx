@@ -36,9 +36,10 @@ export function JobCard({
   } = useSortable({ id: id ?? "" });
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.3 : 1,
+    zIndex: isDragging ? 0 : undefined,
   };
 
   if (type === "add") {
@@ -72,9 +73,16 @@ export function JobCard({
         )}
       >
         <div className="flex flex-col gap-[8px]">
-          <span className="text-[16px] font-[600] leading-[24px] tracking-[-0.32px] text-[#343E4C]">
-            {companyName}
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-[16px] font-[600] leading-[24px] tracking-[-0.32px] text-[#343E4C]">
+              {companyName}
+            </span>
+            {id && (
+              <span className="text-[12px] text-gray-400">
+                #{id}
+              </span>
+            )}
+          </div>
           <span className="text-[13px] font-[500] leading-[15.52px] tracking-[-0.26px] text-[#343E4C]">
             {companyName}
           </span>
@@ -105,9 +113,16 @@ export function JobCard({
       )}
     >
       <div className="flex flex-col gap-[8px]">
-        <span className="text-[16px] font-[600] leading-[24px] tracking-[-0.32px] text-[#343E4C]">
-          {companyName}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="text-[16px] font-[600] leading-[24px] tracking-[-0.32px] text-[#343E4C]">
+            {companyName}
+          </span>
+          {id && (
+            <span className="text-[12px] text-gray-400">
+              #{id}
+            </span>
+          )}
+        </div>
         <span className="text-[13px] font-[600] leading-[15.52px] tracking-[-0.26px] text-[#343E4C]">
           {title}
         </span>

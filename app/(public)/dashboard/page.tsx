@@ -97,7 +97,7 @@ function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardC
               onClick={() => handleCardClick(job, column.id)}
             />
           ))}
-          <JobCard type="add" onClick={() => handleCardClick({ id: Date.now(), companyName: "" }, column.id)} />
+          <JobCard type="add" onClick={() => handleCardClick({ id: -Date.now(), companyName: "" }, column.id)} />
         </div>
       </SortableContext>
     </div>
@@ -124,8 +124,8 @@ export default function DashboardPage() {
       const mappedColumns: Column[] = dashboardsData.map((dashboard) => ({
         id: dashboard.id.toString(),
         title: dashboard.label,
-        jobs: (dashboard.jobPostings || []).map((jp, index) => ({
-          id: index, // 임시 ID (API에서 ID를 제공하지 않음)
+        jobs: (dashboard.jobPostings || []).map((jp) => ({
+          id: jp.id,
           companyName: jp.companyName,
           title: jp.title,
           deadline: jp.deadline,
@@ -145,7 +145,7 @@ export default function DashboardPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -272,7 +272,7 @@ export default function DashboardPage() {
                     onClick={() => handleCardClick(job, column.id)}
                   />
                 ))}
-                <JobCard type="add" onClick={() => handleCardClick({ id: Date.now(), companyName: "" }, column.id)} />
+                <JobCard type="add" onClick={() => handleCardClick({ id: -Date.now(), companyName: "" }, column.id)} />
               </div>
             </div>,
             ...(index < columns.length - 1
@@ -316,15 +316,7 @@ export default function DashboardPage() {
           ])}
         </div>
 
-        <DragOverlay dropAnimation={{
-          sideEffects: defaultDropAnimationSideEffects({
-            styles: {
-              active: {
-                opacity: "0.5",
-              },
-            },
-          }),
-        }}>
+        <DragOverlay>
           {activeJob ? (
             <JobCard
               id={activeJob.id}
@@ -332,6 +324,7 @@ export default function DashboardPage() {
               companyName={activeJob.companyName}
               title={activeJob.title}
               deadline={activeJob.deadline}
+              className="rotate-3 scale-105 shadow-xl transition-transform"
             />
           ) : null}
         </DragOverlay>
