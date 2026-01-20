@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
+import { FloatingActionButton } from "@/components/features/dashboard/floating-action-button";
 import { useAuth } from "@/lib/auth/useAuth";
 import { useGetDashboards } from "@/lib/api/generated/dashboard/dashboard";
 import {
@@ -298,6 +299,13 @@ export default function DashboardPage() {
               : [])
           ])}
         </div>
+        <FloatingActionButton
+          onClick={() => {
+            setSelectedJob({ id: -Date.now(), companyName: "" });
+            setSelectedDashboardId(Number(displayColumns[0]?.id));
+            setIsModalOpen(true);
+          }}
+        />
       </div>
     );
   }
@@ -343,6 +351,13 @@ export default function DashboardPage() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         dashboardId={selectedDashboardId}
+      />
+      <FloatingActionButton
+        onClick={() => {
+          setSelectedJob({ id: -Date.now(), companyName: "" });
+          setSelectedDashboardId(Number(displayColumns[0]?.id));
+          setIsModalOpen(true);
+        }}
       />
     </div>
   );
