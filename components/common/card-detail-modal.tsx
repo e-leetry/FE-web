@@ -100,6 +100,7 @@ const RecruitmentInfoForm = ({ control, setValue, labelClass }: RecruitmentInfoF
       labelClassName={labelClass}
       placeholder="(예시) 전사의 핵심 성과 지표를 정의하고 개선"
       rows={1}
+      autoResize
     />
 
     <FormTextArea
@@ -109,6 +110,7 @@ const RecruitmentInfoForm = ({ control, setValue, labelClass }: RecruitmentInfoF
       labelClassName={labelClass}
       placeholder="(예시) 다양한 조직과 협업하는 걸 좋아하시는 분"
       rows={1}
+      autoResize
     />
 
     <FormTextArea
@@ -118,6 +120,7 @@ const RecruitmentInfoForm = ({ control, setValue, labelClass }: RecruitmentInfoF
       labelClassName={labelClass}
       placeholder="(예시) 부서간 이해관계 조정했던 경험이 있으신 분"
       rows={1}
+      autoResize
     />
   </div>
 );
@@ -136,6 +139,7 @@ const PersonalMemoForm = ({ control, labelClass }: PersonalMemoFormProps) => (
       labelClassName={labelClass}
       placeholder="메모를 입력해주세요"
       rows={10}
+      autoResize
     />
   </div>
 );
@@ -147,9 +151,6 @@ interface CardDetailModalProps {
   dashboardId?: number;
 }
 
-/**
- * Figma 노드 325:6614를 기반으로 재구현한 카드 상세 모달 컴포넌트
- */
 export const CardDetailModal = ({ isOpen, onClose, dashboardId }: CardDetailModalProps) => {
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
   const { mutate: createSummary, isPending: isCreating } = useCreate();
