@@ -13,6 +13,10 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
+import type {
+  UserResponse
+} from '.././model';
+
 import { customInstance } from '../../custom-instance';
 import type { ErrorType } from '../../custom-instance';
 
@@ -27,9 +31,8 @@ export const getAllUsers = (
 ) => {
       
       
-      return customInstance<Blob>(
-      {url: `/api/v1/admin/users`, method: 'GET',
-        responseType: 'blob', signal
+      return customInstance<UserResponse[]>(
+      {url: `/api/v1/admin/users`, method: 'GET', signal
     },
       options);
     }

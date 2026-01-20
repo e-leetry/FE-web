@@ -177,6 +177,11 @@ export const CardDetailModal = ({ isOpen, onClose, dashboardId }: CardDetailModa
   }, [isOpen, form.reset]);
 
   const onSubmit = (values: CardDetailValues) => {
+    if (dashboardId === undefined) {
+      console.error("dashboardId is required to create a job posting summary");
+      return;
+    }
+
     const contentJson = JSON.stringify({
       process: values.process,
       mainTasks: values.mainTasks,

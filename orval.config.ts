@@ -18,7 +18,10 @@ export default defineConfig({
       },
     },
     input: {
-      target: './swagger.json', // 또는 백엔드 swagger url: http://localhost:8100/v3/api-docs
+      target: './swagger.json',
+      override: {
+        transformer: './lib/api/swagger-transformer.ts',
+      },
     },
   },
 });

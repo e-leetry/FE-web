@@ -1,30 +1,29 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
 import { useAuth } from "@/lib/auth/useAuth";
 import { useGetDashboards } from "@/lib/api/generated/dashboard/dashboard";
 import {
-  DndContext,
-  DragOverlay,
   closestCorners,
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
-  useSensor,
-  useSensors,
-  DragStartEvent,
-  DragOverEvent,
-  DragEndEvent,
-  defaultDropAnimationSideEffects,
   useDroppable,
+  useSensor,
+  useSensors
 } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
+  verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 
 interface Job {
@@ -69,9 +68,15 @@ const INITIAL_COLUMNS: Column[] = [
   }
 ];
 
-function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardClick: (job: Job, columnId: string) => void }) {
+function KanbanColumn({
+  column,
+  handleCardClick
+}: {
+  column: Column;
+  handleCardClick: (job: Job, columnId: string) => void;
+}) {
   const { setNodeRef } = useDroppable({
-    id: column.id,
+    id: column.id
   });
 
   return (
@@ -82,10 +87,7 @@ function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardC
         items={column.jobs.map((job) => job.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div 
-          ref={setNodeRef} 
-          className="flex flex-1 flex-col gap-[16px] min-h-[200px]"
-        >
+        <div ref={setNodeRef} className="flex flex-1 flex-col gap-[16px] min-h-[200px]">
           {column.jobs.map((job) => (
             <JobCard
               key={job.id}
@@ -97,7 +99,10 @@ function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardC
               onClick={() => handleCardClick(job, column.id)}
             />
           ))}
-          <JobCard type="add" onClick={() => handleCardClick({ id: -Date.now(), companyName: "" }, column.id)} />
+          <JobCard
+            type="add"
+            onClick={() => handleCardClick({ id: -Date.now(), companyName: "" }, column.id)}
+          />
         </div>
       </SortableContext>
     </div>
@@ -106,22 +111,15 @@ function KanbanColumn({ column, handleCardClick }: { column: Column, handleCardC
 
 export default function DashboardPage() {
   const { isLoggedIn } = useAuth();
-  const [columns, setColumns] = useState<Column[]>(INITIAL_COLUMNS);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const { data: dashboardsData } = useGetDashboards({
     query: {
-      enabled: isLoggedIn,
+      enabled: isLoggedIn
     }
   });
 
-  useEffect(() => {
+  const columns = useMemo<Column[]>(() => {
     if (isLoggedIn && dashboardsData) {
-      const mappedColumns: Column[] = dashboardsData.map((dashboard) => ({
+      return dashboardsData.map((dashboard) => ({
         id: dashboard.id.toString(),
         title: dashboard.label,
         jobs: (dashboard.jobPostings || []).map((jp) => ({
@@ -129,35 +127,46 @@ export default function DashboardPage() {
           companyName: jp.companyName,
           title: jp.title,
           deadline: jp.deadline,
-        })),
+          type: "white" as const
+        }))
       }));
-      setColumns(mappedColumns);
-    } else if (!isLoggedIn) {
-      setColumns(INITIAL_COLUMNS);
     }
+    return INITIAL_COLUMNS;
   }, [isLoggedIn, dashboardsData]);
+
+  const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
+  const displayColumns = localColumns || columns;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedDashboardId, setSelectedDashboardId] = useState<number | undefined>(undefined);
   const [activeId, setActiveId] = useState<number | null>(null);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
-      },
+        distance: 8
+      }
     }),
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+      coordinateGetter: sortableKeyboardCoordinates
     })
   );
 
   const findColumn = (id: number | string) => {
-    if (columns.some((col) => col.id === id)) {
-      return columns.find((col) => col.id === id);
+    if (displayColumns.some((col) => col.id === id)) {
+      return displayColumns.find((col) => col.id === id);
     }
-    return columns.find((col) => col.jobs.some((job) => job.id === id));
+    return displayColumns.find((col) => col.jobs.some((job) => job.id === id));
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -178,19 +187,19 @@ export default function DashboardPage() {
       return;
     }
 
-    setColumns((prev) => {
+    setLocalColumns((prev) => {
+      const currentColumns = prev || columns;
       const activeJobs = [...activeColumn.jobs];
       const overJobs = [...overColumn.jobs];
 
       const activeIndex = activeJobs.findIndex((job) => job.id === activeId);
-      const overIndex = overColumn.id === overId 
-        ? overJobs.length 
-        : overJobs.findIndex((job) => job.id === overId);
+      const overIndex =
+        overColumn.id === overId ? overJobs.length : overJobs.findIndex((job) => job.id === overId);
 
       const [removedJob] = activeJobs.splice(activeIndex, 1);
       overJobs.splice(overIndex, 0, removedJob);
 
-      return prev.map((col) => {
+      return currentColumns.map((col) => {
         if (col.id === activeColumn.id) {
           return { ...col, jobs: activeJobs };
         }
@@ -220,17 +229,18 @@ export default function DashboardPage() {
       const overIndex = overColumn.jobs.findIndex((job) => job.id === overId);
 
       if (activeIndex !== overIndex) {
-        setColumns((prev) =>
-          prev.map((col) => {
+        setLocalColumns((prev) => {
+          const currentColumns = prev || columns;
+          return currentColumns.map((col) => {
             if (col.id === activeColumn.id) {
               return {
                 ...col,
-                jobs: arrayMove(col.jobs, activeIndex, overIndex),
+                jobs: arrayMove(col.jobs, activeIndex, overIndex)
               };
             }
             return col;
-          })
-        );
+          });
+        });
       }
     }
 
@@ -249,15 +259,15 @@ export default function DashboardPage() {
     setSelectedDashboardId(undefined);
   };
 
-  const activeJob = activeId 
-    ? columns.flatMap(col => col.jobs).find(job => job.id === activeId)
+  const activeJob = activeId
+    ? displayColumns.flatMap((col) => col.jobs).find((job) => job.id === activeId)
     : null;
 
   if (!mounted) {
     return (
       <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
         <div className="flex min-w-fit flex-1 gap-[20px] px-[80px] py-8 min-[1920px]:gap-[32px] min-[1920px]:px-[240px]">
-          {columns.flatMap((column, index) => [
+          {displayColumns.flatMap((column, index) => [
             <div key={column.id} className="flex min-w-[180px] flex-1 flex-col gap-[16px]">
               <StatusHeader title={column.title} count={column.jobs.length} />
               <div className="flex flex-1 flex-col gap-[16px] min-h-[200px]">
@@ -272,10 +282,13 @@ export default function DashboardPage() {
                     onClick={() => handleCardClick(job, column.id)}
                   />
                 ))}
-                <JobCard type="add" onClick={() => handleCardClick({ id: -Date.now(), companyName: "" }, column.id)} />
+                <JobCard
+                  type="add"
+                  onClick={() => handleCardClick({ id: -Date.now(), companyName: "" }, column.id)}
+                />
               </div>
             </div>,
-            ...(index < columns.length - 1
+            ...(index < displayColumns.length - 1
               ? [
                   <div
                     key={`sep-${index}`}
@@ -299,13 +312,9 @@ export default function DashboardPage() {
         onDragEnd={handleDragEnd}
       >
         <div className="flex min-w-fit flex-1 gap-[20px] px-[80px] py-8 min-[1920px]:gap-[32px] min-[1920px]:px-[240px]">
-          {columns.flatMap((column, index) => [
-            <KanbanColumn
-              key={column.id}
-              column={column}
-              handleCardClick={handleCardClick}
-            />,
-            ...(index < columns.length - 1
+          {displayColumns.flatMap((column, index) => [
+            <KanbanColumn key={column.id} column={column} handleCardClick={handleCardClick} />,
+            ...(index < displayColumns.length - 1
               ? [
                   <div
                     key={`sep-${index}`}
@@ -330,9 +339,9 @@ export default function DashboardPage() {
         </DragOverlay>
       </DndContext>
 
-      <CardDetailModal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
+      <CardDetailModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
         dashboardId={selectedDashboardId}
       />
     </div>

@@ -1,0 +1,42 @@
+import type { OpenAPIObject, SchemaObject } from 'openapi3-ts/oas31';
+
+export default (inputSchema: OpenAPIObject): OpenAPIObject => {
+  const transformedSchema = JSON.parse(JSON.stringify(inputSchema)) as OpenAPIObject;
+
+  if (transformedSchema.paths) {
+    for (const path of Object.values(transformedSchema.paths)) {
+      if (!path) continue;
+
+      for (const method of Object.values(path)) {
+        if (!method || typeof method !== 'object') continue;
+
+        const operation = method as any;
+
+        if (operation.responses) {
+          for (const response of Object.values(operation.responses) as any[]) {
+            const content = response?.content?.['application/json'] || response?.content?.['*/*'];
+            
+            if (content?.schema?.$ref) {
+              const ref = content.schema.$ref;
+              const schemaName = ref.split('/').pop();
+
+              if (schemaName && schemaName.startsWith('ApiResponse')) {
+                const schema = transformedSchema.components?.schemas?.[schemaName] as SchemaObject;
+                if (schema && schema.properties?.data) {
+                  content.schema = schema.properties.data;
+                }
+              }
+            }
+
+            if (response?.content?.['*/*']) {
+              response.content['application/json'] = response.content['*/*'];
+              delete response.content['*/*'];
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return transformedSchema;
+};

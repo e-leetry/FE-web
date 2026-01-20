@@ -13,6 +13,10 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
+import type {
+  DashboardResponse
+} from '.././model';
+
 import { customInstance } from '../../custom-instance';
 import type { ErrorType } from '../../custom-instance';
 
@@ -31,9 +35,8 @@ export const getDashboards = (
 ) => {
       
       
-      return customInstance<Blob>(
-      {url: `/api/v1/dashboards`, method: 'GET',
-        responseType: 'blob', signal
+      return customInstance<DashboardResponse[]>(
+      {url: `/api/v1/dashboards`, method: 'GET', signal
     },
       options);
     }
