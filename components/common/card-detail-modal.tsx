@@ -186,28 +186,31 @@ export const CardDetailModal = ({ isOpen, onClose, dashboardId }: CardDetailModa
       process: values.process,
       mainTasks: values.mainTasks,
       qualifications: values.qualifications,
-      preferences: values.preferences,
+      preferences: values.preferences
     });
 
-    createSummary({
-      data: {
-        dashboardId: dashboardId,
-        title: values.jobTitle,
-        companyName: values.companyName,
-        url: values.jobUrl,
-        deadline: values.deadline,
-        platform: JobPostingSummaryCreateRequestPlatform.UNKNOWN,
-        contentJson: contentJson,
-        memo: values.memo,
-      }
-    }, {
-      onSuccess: () => {
-        handleClose();
+    createSummary(
+      {
+        data: {
+          dashboardId: dashboardId,
+          title: values.jobTitle,
+          companyName: values.companyName,
+          url: values.jobUrl,
+          deadline: values.deadline,
+          platform: JobPostingSummaryCreateRequestPlatform.UNKNOWN,
+          contentJson: contentJson,
+          memo: values.memo
+        }
       },
-      onError: (error) => {
-        console.error("채용 공고 요약 등록 실패:", error);
+      {
+        onSuccess: () => {
+          handleClose();
+        },
+        onError: (error) => {
+          console.error("채용 공고 요약 등록 실패:", error);
+        }
       }
-    });
+    );
   };
 
   if (!isOpen) return null;
@@ -218,7 +221,6 @@ export const CardDetailModal = ({ isOpen, onClose, dashboardId }: CardDetailModa
   };
 
   const labelClass = "text-[16px] font-bold text-[#727272] mb-[12px] block";
-  const actionButtonClass = "flex-1 sm:flex-none sm:w-[120px] h-[56px] text-[16px] md:text-[18px] font-medium rounded-[16px] transition-colors";
 
   const navItemBaseClass =
     "flex flex-col items-center justify-center w-[72px] h-[72px] rounded-[12px] cursor-pointer transition-colors gap-1";
@@ -276,27 +278,24 @@ export const CardDetailModal = ({ isOpen, onClose, dashboardId }: CardDetailModa
         </>
       }
       footer={
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2 w-full sm:w-auto justify-end">
           <Button
             type="button"
-            variant="soft"
-            color="dark"
+            color="neutral"
+            size="xl"
             disabled={isCreating}
             onClick={handleClose}
-            className={cn(actionButtonClass, "bg-[#F1F1F1] border-none text-[#727272] hover:bg-[#E9E9E9]")}
+            className="flex-1 sm:flex-none"
           >
             닫기
           </Button>
           <Button
             type="submit"
-            variant="solid"
-            color="dark"
+            color="primary"
+            size="xl"
             disabled={isCreating}
             form="card-detail-form"
-            className={cn(
-              actionButtonClass,
-              "bg-[#282828] text-white hover:bg-[#3f3f3f] disabled:bg-[#F1F1F1] disabled:text-[#AAAAAA]"
-            )}
+            className="flex-1 sm:flex-none"
           >
             {isCreating ? "저장 중..." : "저장하기"}
           </Button>
@@ -310,7 +309,11 @@ export const CardDetailModal = ({ isOpen, onClose, dashboardId }: CardDetailModa
           className="flex flex-col"
         >
           {activeTab === "info" ? (
-            <RecruitmentInfoForm control={form.control} setValue={form.setValue} labelClass={labelClass} />
+            <RecruitmentInfoForm
+              control={form.control}
+              setValue={form.setValue}
+              labelClass={labelClass}
+            />
           ) : (
             <>
               <div className="text-[32px] font-bold text-[#282828] mb-10">

@@ -21,7 +21,7 @@ type ButtonCSSVariables = {
 };
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:bg-[#F1F1F1] disabled:text-[#AAAAAA] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -44,11 +44,12 @@ const buttonVariants = cva(
         sm: "h-9 rounded-md px-3",
         md: "h-10 px-4 py-2",
         lg: "h-11 rounded-md px-8",
+        xl: "h-[56px] text-[16px] md:text-[18px] font-medium rounded-[16px] transition-colors flex-shrink-0",
         icon: "h-10 w-10"
       }
     },
     defaultVariants: {
-      variant: "default",
+      variant: "solid",
       size: "default"
     }
   }
@@ -68,7 +69,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => {
   const {
     className,
-    variant = "default",
+    variant = "solid",
     size = "default",
     color: colorProp,
     asChild = false,
@@ -102,6 +103,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => 
 
   let childContent: React.ReactNode = children;
 
+  // Calculate dynamic width based on text length
+  // 4 characters or less: fixed width (120px for xl, 84px for others)
+  // 5 characters or more: expand
+  const getMinWidthClass = () => {
+    if (asChild || typeof children !== "string") return "";
+    const length = children.length;
+    if (length <= 4) {
+      return size === "xl" ? "min-w-[120px]" : "min-w-[84px]";
+    }
+    return "min-w-fit px-4";
+  };
+
   if (asChild) {
     const childElements = React.Children.toArray(children).filter(
       (child): child is React.ReactElement => React.isValidElement(child)
@@ -118,7 +131,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>((props, ref) => 
 
   return (
     <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, className }), getMinWidthClass())}
       ref={ref}
       disabled={disabled || isLoading}
       data-loading={isLoading ? "" : undefined}
