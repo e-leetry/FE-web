@@ -1,17 +1,27 @@
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   ApiResponseUnit,
   JobPostingSummaryCreateRequest,
   JobPostingSummaryMoveRequest,
+  JobPostingSummaryResponse,
   JobPostingSummaryUpdateRequest
 } from '.././model';
 
@@ -86,6 +96,159 @@ export const useCreate = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateMutationOptions(options), queryClient);
+    }
+    /**
+ * ID로 채용 공고 요약 정보를 조회합니다.
+ * @summary 채용 공고 요약 단건 조회
+ */
+export const getById = (
+    id: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<JobPostingSummaryResponse>(
+      {url: `/api/v1/job-posting-summaries/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetByIdQueryKey = (id?: number,) => {
+    return [
+    `/api/v1/job-posting-summaries/${id}`
+    ] as const;
+    }
+
+    
+export const getGetByIdQueryOptions = <TData = Awaited<ReturnType<typeof getById>>, TError = ErrorType<unknown>>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetByIdQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getById>>> = ({ signal }) => getById(id, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetByIdQueryResult = NonNullable<Awaited<ReturnType<typeof getById>>>
+export type GetByIdQueryError = ErrorType<unknown>
+
+
+export function useGetById<TData = Awaited<ReturnType<typeof getById>>, TError = ErrorType<unknown>>(
+ id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getById>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getById>>,
+          TError,
+          Awaited<ReturnType<typeof getById>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetById<TData = Awaited<ReturnType<typeof getById>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getById>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getById>>,
+          TError,
+          Awaited<ReturnType<typeof getById>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetById<TData = Awaited<ReturnType<typeof getById>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary 채용 공고 요약 단건 조회
+ */
+
+export function useGetById<TData = Awaited<ReturnType<typeof getById>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getById>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetByIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+/**
+ * 채용 공고 요약 정보를 삭제합니다.
+ * @summary 채용 공고 요약 삭제
+ */
+export const _delete = (
+    id: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApiResponseUnit>(
+      {url: `/api/v1/job-posting-summaries/${id}`, method: 'DELETE', signal
+    },
+      options);
+    }
+  
+
+
+export const getDeleteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof _delete>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof _delete>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['_delete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof _delete>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  _delete(id,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type _DeleteMutationResult = NonNullable<Awaited<ReturnType<typeof _delete>>>
+    
+    export type _DeleteMutationError = ErrorType<unknown>
+
+    /**
+ * @summary 채용 공고 요약 삭제
+ */
+export const useDelete = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof _delete>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof _delete>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteMutationOptions(options), queryClient);
     }
     /**
  * 채용 공고 요약 정보를 수정합니다. (순서/대시보드 제외)

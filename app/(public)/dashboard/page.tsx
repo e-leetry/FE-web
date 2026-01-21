@@ -264,6 +264,16 @@ export default function DashboardPage() {
     ? displayColumns.flatMap((col) => col.jobs).find((job) => job.id === activeId)
     : null;
 
+  const initialModalData = useMemo(() => {
+    if (!selectedJob || selectedJob.id < 0) return null;
+    
+    // selectedJob에는 id, companyName, title, deadline 등이 있음
+    // dashboardsData에서 더 상세한 정보를 찾을 수 있다면 좋지만, 
+    // 현재 dashboardsData 구조상 jobPostings에 상세 정보가 포함되어 있음
+    const allJobs = dashboardsData?.flatMap(d => d.jobPostings || []) || [];
+    return allJobs.find(jp => jp.id === selectedJob.id);
+  }, [selectedJob, dashboardsData]);
+
   if (!mounted) {
     return (
       <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
@@ -351,6 +361,8 @@ export default function DashboardPage() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         dashboardId={selectedDashboardId}
+        jobPostingId={selectedJob?.id && selectedJob.id > 0 ? selectedJob.id : undefined}
+        initialData={initialModalData}
       />
       <FloatingActionButton
         onClick={() => {

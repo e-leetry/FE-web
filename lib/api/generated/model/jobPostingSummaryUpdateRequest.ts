@@ -1,3 +1,4 @@
+import type { JobPostingContent } from './jobPostingContent';
 import type { JobPostingSummaryUpdateRequestPlatform } from './jobPostingSummaryUpdateRequestPlatform';
 
 /**
@@ -10,8 +11,8 @@ export interface JobPostingSummaryUpdateRequest {
   companyName: string;
   /** 공고 URL */
   url?: string;
-  /** 공고 내용 JSON */
-  contentJson?: string;
+  /** 공고 내용 */
+  contentJson?: JobPostingContent;
   /** 마감일 */
   deadline?: string;
   /** 수집 일시 */
