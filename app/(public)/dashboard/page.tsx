@@ -6,7 +6,10 @@ import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
 import { FloatingActionButton } from "@/components/features/dashboard/floating-action-button";
 import { useAuth } from "@/lib/auth/useAuth";
-import { useGetDashboards, getGetDashboardsQueryKey } from "@/lib/api/generated/dashboard/dashboard";
+import {
+  useGetDashboards,
+  getGetDashboardsQueryKey
+} from "@/lib/api/generated/dashboard/dashboard";
 import { useMove } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -133,7 +136,7 @@ export default function DashboardPage() {
   });
 
   const columns = useMemo<Column[]>(() => {
-    if (isLoggedIn && dashboardsData) {
+    if (isLoggedIn && dashboardsData && dashboardsData.length > 0) {
       return dashboardsData.map((dashboard) => ({
         id: dashboard.id.toString(),
         title: dashboard.label,
@@ -146,6 +149,7 @@ export default function DashboardPage() {
         }))
       }));
     }
+
     return INITIAL_COLUMNS;
   }, [isLoggedIn, dashboardsData]);
 
@@ -196,11 +200,11 @@ export default function DashboardPage() {
   const handleDragStart = (event: DragStartEvent) => {
     const activeId = event.active.id as number;
     setActiveId(activeId);
-    
+
     const activeColumn = findColumn(activeId);
     if (activeColumn) {
       setOriginalColumnId(activeColumn.id);
-      setOriginalIndex(activeColumn.jobs.findIndex(job => job.id === activeId));
+      setOriginalIndex(activeColumn.jobs.findIndex((job) => job.id === activeId));
     }
   };
 
@@ -272,8 +276,7 @@ export default function DashboardPage() {
     const targetIndex = overIndex === -1 ? overColumn.jobs.length : overIndex;
 
     // 원래 위치(컬럼, 인덱스)와 드롭된 위치를 비교
-    const isSamePosition = 
-      originalColumnId === overColumn.id && originalIndex === targetIndex;
+    const isSamePosition = originalColumnId === overColumn.id && originalIndex === targetIndex;
 
     if (isSamePosition) {
       setActiveId(null);
@@ -314,12 +317,12 @@ export default function DashboardPage() {
 
   const initialModalData = useMemo(() => {
     if (!selectedJob || selectedJob.id < 0) return null;
-    
+
     // selectedJob에는 id, companyName, title, deadline 등이 있음
-    // dashboardsData에서 더 상세한 정보를 찾을 수 있다면 좋지만, 
+    // dashboardsData에서 더 상세한 정보를 찾을 수 있다면 좋지만,
     // 현재 dashboardsData 구조상 jobPostings에 상세 정보가 포함되어 있음
-    const allJobs = dashboardsData?.flatMap(d => d.jobPostings || []) || [];
-    return allJobs.find(jp => jp.id === selectedJob.id);
+    const allJobs = dashboardsData?.flatMap((d) => d.jobPostings || []) || [];
+    return allJobs.find((jp) => jp.id === selectedJob.id);
   }, [selectedJob, dashboardsData]);
 
   if (!mounted) {
