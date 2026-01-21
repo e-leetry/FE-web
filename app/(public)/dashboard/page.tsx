@@ -6,7 +6,9 @@ import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
 import { FloatingActionButton } from "@/components/features/dashboard/floating-action-button";
 import { useAuth } from "@/lib/auth/useAuth";
-import { useGetDashboards } from "@/lib/api/generated/dashboard/dashboard";
+import { useGetDashboards, getGetDashboardsQueryKey } from "@/lib/api/generated/dashboard/dashboard";
+import { useMove } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   closestCorners,
   DndContext,
@@ -45,12 +47,12 @@ const INITIAL_COLUMNS: Column[] = [
   {
     id: "interest",
     title: "관심공고",
-    jobs: [{ id: 1, companyName: "엔카닷컴", type: "loading" }]
+    jobs: []
   },
   {
     id: "applied",
     title: "서류제출",
-    jobs: [{ id: 2, companyName: "네이버", title: "Product Designer", deadline: "25. 10. 19" }]
+    jobs: []
   },
   {
     id: "interview1",
@@ -112,9 +114,21 @@ function KanbanColumn({
 
 export default function DashboardPage() {
   const { isLoggedIn } = useAuth();
+  const queryClient = useQueryClient();
   const { data: dashboardsData } = useGetDashboards({
     query: {
       enabled: isLoggedIn
+    }
+  });
+
+  const moveMutation = useMove({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
+      },
+      onError: (error) => {
+        console.error("Move mutation failed:", error);
+      }
     }
   });
 
@@ -136,12 +150,21 @@ export default function DashboardPage() {
   }, [isLoggedIn, dashboardsData]);
 
   const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
+  const [prevColumns, setPrevColumns] = useState<Column[]>(columns);
+
+  if (columns !== prevColumns) {
+    setLocalColumns(null);
+    setPrevColumns(columns);
+  }
+
   const displayColumns = localColumns || columns;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedDashboardId, setSelectedDashboardId] = useState<number | undefined>(undefined);
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [originalColumnId, setOriginalColumnId] = useState<string | null>(null);
+  const [originalIndex, setOriginalIndex] = useState<number | null>(null);
 
   const [mounted, setMounted] = useState(false);
 
@@ -155,7 +178,7 @@ export default function DashboardPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8
+        distance: 3
       }
     }),
     useSensor(KeyboardSensor, {
@@ -171,7 +194,14 @@ export default function DashboardPage() {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as number);
+    const activeId = event.active.id as number;
+    setActiveId(activeId);
+    
+    const activeColumn = findColumn(activeId);
+    if (activeColumn) {
+      setOriginalColumnId(activeColumn.id);
+      setOriginalIndex(activeColumn.jobs.findIndex(job => job.id === activeId));
+    }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
@@ -214,38 +244,56 @@ export default function DashboardPage() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+
     if (!over) {
       setActiveId(null);
+      setOriginalColumnId(null);
+      setOriginalIndex(null);
       return;
     }
 
     const activeId = active.id as number;
     const overId = over.id as number | string;
 
-    const activeColumn = findColumn(activeId);
     const overColumn = findColumn(overId);
 
-    if (activeColumn && overColumn && activeColumn === overColumn) {
-      const activeIndex = activeColumn.jobs.findIndex((job) => job.id === activeId);
-      const overIndex = overColumn.jobs.findIndex((job) => job.id === overId);
-
-      if (activeIndex !== overIndex) {
-        setLocalColumns((prev) => {
-          const currentColumns = prev || columns;
-          return currentColumns.map((col) => {
-            if (col.id === activeColumn.id) {
-              return {
-                ...col,
-                jobs: arrayMove(col.jobs, activeIndex, overIndex)
-              };
-            }
-            return col;
-          });
-        });
-      }
+    if (!overColumn) {
+      setActiveId(null);
+      setOriginalColumnId(null);
+      setOriginalIndex(null);
+      return;
     }
 
+    const overIndex =
+      overColumn.id === overId
+        ? overColumn.jobs.length
+        : overColumn.jobs.findIndex((job) => job.id === overId);
+
+    const targetIndex = overIndex === -1 ? overColumn.jobs.length : overIndex;
+
+    // 원래 위치(컬럼, 인덱스)와 드롭된 위치를 비교
+    const isSamePosition = 
+      originalColumnId === overColumn.id && originalIndex === targetIndex;
+
+    if (isSamePosition) {
+      setActiveId(null);
+      setOriginalColumnId(null);
+      setOriginalIndex(null);
+      return;
+    }
+
+    // API 호출
+    moveMutation.mutate({
+      id: activeId,
+      data: {
+        dashboardId: Number(overColumn.id),
+        sortOrder: targetIndex
+      }
+    });
+
     setActiveId(null);
+    setOriginalColumnId(null);
+    setOriginalIndex(null);
   };
 
   const handleCardClick = (job: Job, columnId: string) => {
