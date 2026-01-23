@@ -1,27 +1,27 @@
-import { defineConfig } from 'orval';
+import { defineConfig } from "orval";
 
 export default defineConfig({
   reetry: {
     output: {
-      mode: 'tags-split',
-      target: 'lib/api/generated/reetry.ts',
-      schemas: 'lib/api/generated/model',
-      client: 'react-query',
-      httpClient: 'axios',
+      mode: "tags-split",
+      target: "lib/api/generated/reetry.ts",
+      schemas: "lib/api/generated/model",
+      client: "react-query",
+      httpClient: "axios",
       mock: false,
       override: {
         mutator: {
-          path: './lib/api/custom-instance.ts',
-          name: 'customInstance',
+          path: "./lib/api/custom-instance.ts",
+          name: "customInstance"
         },
-        header: false,
-      },
+        header: false
+      }
     },
     input: {
-      target: './swagger.json',
+      target: "./swagger.json",
       override: {
-        transformer: './lib/api/swagger-transformer.ts',
-      },
-    },
-  },
+        transformer: "./lib/api/swagger-transformer.js"
+      }
+    }
+  }
 });

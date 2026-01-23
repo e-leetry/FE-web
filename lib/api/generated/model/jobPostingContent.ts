@@ -9,4 +9,6 @@ export interface JobPostingContent {
   qualifications?: string;
   /** 우대사항 */
   preferences?: string;
+  /** 채용과정 */
+  process?: string;
 }
