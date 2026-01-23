@@ -49,17 +49,25 @@ export const BaseModal = ({
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
     const currentRef = scrollRef.current;
     if (currentRef) {
       currentRef.addEventListener("scroll", handleScroll);
     }
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
       if (currentRef) {
         currentRef.removeEventListener("scroll", handleScroll);
       }
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -77,11 +85,11 @@ export const BaseModal = ({
       {/* 모달 본체 */}
       <div
         className={modalContainerClass}
-        style={{ 
-          width: "100%", 
-          height: "100%", 
-          maxWidth: width, 
-          maxHeight: height 
+        style={{
+          width: "100%",
+          height: "100%",
+          maxWidth: width,
+          maxHeight: height
         }}
         onClick={(e) => e.stopPropagation()}
       >

@@ -11,6 +11,7 @@ interface FormInputProps<
   type?: string;
   inputClassName?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  rightElement?: React.ReactNode;
 }
 
 /**
@@ -28,7 +29,8 @@ export const FormInput = <
   className,
   labelClassName,
   inputClassName,
-  onChange
+  onChange,
+  rightElement
 }: FormInputProps<TFieldValues, TName>) => {
   return (
     <FormField
@@ -38,16 +40,23 @@ export const FormInput = <
         <FormItem className={cn("space-y-0", className)}>
           <FormLabel className={labelClassName}>{label}</FormLabel>
           <FormControl>
-            <input
-              {...field}
-              type={type}
-              className={cn(FORM_FIELD_BASE_CLASS, inputClassName)}
-              placeholder={placeholder}
-              onChange={(e) => {
-                field.onChange(e);
-                onChange?.(e);
-              }}
-            />
+            <div className="relative flex items-center">
+              <input
+                {...field}
+                type={type}
+                className={cn(FORM_FIELD_BASE_CLASS, rightElement && "pr-12", inputClassName)}
+                placeholder={placeholder}
+                onChange={(e) => {
+                  field.onChange(e);
+                  onChange?.(e);
+                }}
+              />
+              {rightElement && (
+                <div className="absolute right-4 flex items-center justify-center">
+                  {rightElement}
+                </div>
+              )}
+            </div>
           </FormControl>
           <FormMessage />
         </FormItem>

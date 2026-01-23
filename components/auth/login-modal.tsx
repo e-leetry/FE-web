@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect } from "react";
 import { buildAuthorizeUrl } from "@/lib/auth/routes";
 import { DimOverlay } from "@/components/ui/dim-overlay";
 
@@ -10,6 +11,17 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen && onClose) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleGoogleLogin = () => {
