@@ -19,6 +19,7 @@ export * from './jobPostingSummaryUpdateRequestPlatform';
 export * from './jobSummarizeRequest';
 export * from './jobSummaryResponse';
 export * from './jobSummaryResponseStatus';
+export * from './serverSentEventString';
 export * from './userResponse';
 export * from './userResponseProvider';
 export * from './userResponseRole';

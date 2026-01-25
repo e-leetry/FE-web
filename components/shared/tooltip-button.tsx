@@ -18,7 +18,7 @@ export function TooltipButton({
   return (
     <div
       className={cn(
-        "relative bg-[#2B2B2B] text-white w-[200px] h-[69px] rounded-[20px] flex items-center justify-between px-6 shadow-lg",
+        "relative bg-[#2B2B2B] text-white w-[200px] h-[69px] rounded-[20px] flex items-center justify-between px-6",
         className
       )}
     >

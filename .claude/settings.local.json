@@ -1,4 +1,15 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__Figma__get_figma_data",
+      "Bash(npx tsc:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "Figma",
+    "shadcn",
+    "next-devtools"
+  ],
   "hooks": {
     "PostToolUse": [
       {

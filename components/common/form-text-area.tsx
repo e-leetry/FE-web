@@ -2,7 +2,7 @@
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useCallback, useEffect, useRef } from "react";
-import { FieldPath, FieldValues } from "react-hook-form";
+import { FieldPath, FieldValues, useWatch } from "react-hook-form";
 import { BaseFormFieldProps, FORM_FIELD_BASE_CLASS, cn } from "./form-shared";
 
 interface FormTextAreaProps<
@@ -32,6 +32,9 @@ export const FormTextArea = <
 }: FormTextAreaProps<TFieldValues, TName>) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // 필드 값 감시 (setValue로 변경될 때도 감지)
+  const fieldValue = useWatch({ control, name });
+
   const handleResize = useCallback(() => {
     if (!autoResize || !textareaRef.current) return;
 
@@ -39,11 +42,12 @@ export const FormTextArea = <
     textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
   }, [autoResize]);
 
+  // 값이 변경될 때마다 resize
   useEffect(() => {
     if (autoResize) {
       handleResize();
     }
-  }, [autoResize, handleResize]);
+  }, [autoResize, handleResize, fieldValue]);
 
   return (
     <FormField

@@ -23,6 +23,7 @@ import {
   JobPostingSummaryCreateRequestPlatform,
   JobPostingSummaryUpdateRequestPlatform
 } from "@/lib/api/generated/model";
+import { SseStreamingData } from "@/lib/hooks/use-job-summarize-sse";
 
 const cardDetailSchema = z.object({
   companyName: z.string().min(1, "기업명을 입력해주세요"),
@@ -222,6 +223,7 @@ interface CardDetailModalProps {
   dashboardId?: number;
   jobPostingId?: number;
   initialData?: any;
+  sseData?: SseStreamingData;
 }
 
 export const CardDetailModal = ({
@@ -229,7 +231,8 @@ export const CardDetailModal = ({
   onClose,
   dashboardId,
   jobPostingId,
-  initialData
+  initialData,
+  sseData
 }: CardDetailModalProps) => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
@@ -238,7 +241,8 @@ export const CardDetailModal = ({
 
   const { data: jobPostingData, isLoading: isFetching, refetch: summarize, isRefetching: isSummarizing } = useGetById(jobPostingId as number, {
     query: {
-      enabled: !!jobPostingId && isOpen
+      // SSE 모드가 아닐 때만 기존 데이터를 불러옴
+      enabled: !!jobPostingId && isOpen && !sseData
     }
   });
 
@@ -268,12 +272,14 @@ export const CardDetailModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    // SSE 모드에서는 기존 초기화 로직 건너뛰기
+    if (sseData) return;
 
     // 린트 에러를 방지하기 위해 비동기적으로 상태 업데이트
     const timer = setTimeout(() => {
       setActiveTab("info");
     }, 0);
-    
+
     const dataToUse = jobPostingData || initialData;
 
     if (isEdit && dataToUse) {
@@ -315,9 +321,12 @@ export const CardDetailModal = ({
     }
 
     return () => clearTimeout(timer);
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, sseData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    // SSE 모드에서는 기존 초기화 로직 건너뛰기
+    if (sseData) return;
+
     if (isOpen && isEdit && (jobPostingData || initialData)) {
       const dataToUse = jobPostingData || initialData;
       let parsedContent = {
@@ -343,7 +352,53 @@ export const CardDetailModal = ({
         memo: dataToUse.memo || ""
       });
     }
-  }, [jobPostingData, initialData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [jobPostingData, initialData, sseData]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // SSE 메타데이터로 폼 초기화
+  useEffect(() => {
+    if (sseData?.metadata && isOpen) {
+      setActiveTab("info");
+      form.reset({
+        companyName: sseData.metadata.companyName || "",
+        jobTitle: sseData.metadata.title || "",
+        jobUrl: sseData.metadata.originalUrl || "",
+        process: "",
+        deadline: sseData.metadata.deadline || "",
+        mainTasks: "",
+        qualifications: "",
+        preferences: "",
+        memo: ""
+      });
+    }
+  }, [sseData?.metadata, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 마크다운 리스트 형식으로 변환 (- 를 • 로 변환하고 줄바꿈 추가)
+  const formatBulletList = (text: string) => {
+    return text
+      .replace(/-/g, "\n• ")   // 모든 - 를 줄바꿈 + • 로 변환
+      .replace(/^\n• /, "• ")  // 맨 앞 줄바꿈 제거
+      .trim();
+  };
+
+  // SSE 스트리밍 데이터로 폼 필드 업데이트
+  useEffect(() => {
+    if (sseData && isOpen) {
+      if (sseData.hireProcess) {
+        form.setValue("process", sseData.hireProcess, { shouldDirty: true });
+      }
+      if (sseData.mainTasks) {
+        form.setValue("mainTasks", formatBulletList(sseData.mainTasks), { shouldDirty: true });
+      }
+      if (sseData.requirements) {
+        form.setValue("qualifications", formatBulletList(sseData.requirements), { shouldDirty: true });
+      }
+      if (sseData.preferred) {
+        form.setValue("preferences", formatBulletList(sseData.preferred), { shouldDirty: true });
+      }
+    }
+  }, [sseData?.hireProcess, sseData?.mainTasks, sseData?.requirements, sseData?.preferred, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const isSseStreaming = sseData?.isStreaming || false;
 
   const onSubmit = (values: CardDetailValues) => {
     const contentJson = {
@@ -418,7 +473,7 @@ export const CardDetailModal = ({
 
   const labelClass = "text-[16px] font-bold text-[#727272] mb-[12px] block";
 
-  const isPending = isCreating || isUpdating || isFetching;
+  const isPending = isCreating || isUpdating || isFetching || isSseStreaming;
 
   const navItemBaseClass =
     "flex flex-col items-center justify-center w-[72px] h-[72px] rounded-[12px] cursor-pointer transition-colors gap-1";
@@ -495,7 +550,7 @@ export const CardDetailModal = ({
             form="card-detail-form"
             className="flex-1 sm:flex-none"
           >
-            {isPending ? (isFetching ? "로딩 중..." : "저장 중...") : "저장하기"}
+            {isPending ? (isSseStreaming ? "요약 중..." : isFetching ? "로딩 중..." : "저장 중...") : "저장하기"}
           </Button>
         </div>
       }

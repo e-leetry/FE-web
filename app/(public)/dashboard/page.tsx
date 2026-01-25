@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
-import { FloatingActionButton } from "@/components/features/dashboard/floating-action-button";
+import { FloatingInputButton } from "@/components/features/dashboard/floating-input-button";
 import { useAuth } from "@/lib/auth/useAuth";
 import {
   useGetDashboards,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/api/generated/dashboard/dashboard";
 import { useMove } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
 import { useQueryClient } from "@tanstack/react-query";
+import { useJobSummarizeContext } from "@/lib/context/job-summarize-context";
 import {
   closestCorners,
   DndContext,
@@ -118,6 +119,10 @@ function KanbanColumn({
 export default function DashboardPage() {
   const { isLoggedIn } = useAuth();
   const queryClient = useQueryClient();
+  const { streamingData, startSummarize, reset: resetSse } = useJobSummarizeContext();
+  const [isInputOpen, setIsInputOpen] = useState(false);
+  const [isInputLoading, setIsInputLoading] = useState(false);
+
   const { data: dashboardsData } = useGetDashboards({
     query: {
       enabled: isLoggedIn
@@ -181,6 +186,7 @@ export default function DashboardPage() {
   const [originalIndex, setOriginalIndex] = useState<number | null>(null);
 
   const [mounted, setMounted] = useState(false);
+  const [sseJobId, setSseJobId] = useState<number | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -188,6 +194,54 @@ export default function DashboardPage() {
     }, 0);
     return () => clearTimeout(timer);
   }, []);
+
+  // SSE 메타데이터 도착 시 처리
+  useEffect(() => {
+    if (streamingData.metadata && isInputLoading) {
+      setIsInputLoading(false);
+      setIsInputOpen(false);
+
+      // 메타데이터에서 jobId 저장
+      setSseJobId(streamingData.metadata.jobId);
+
+      // 첫 번째 대시보드 ID (관심공고) 설정
+      const firstDashboardId = displayColumns[0]?.id ? Number(displayColumns[0].id) : undefined;
+      setSelectedDashboardId(firstDashboardId);
+
+      // SSE용 임시 job 데이터 설정
+      setSelectedJob({
+        id: streamingData.metadata.jobId,
+        companyName: streamingData.metadata.companyName,
+        title: streamingData.metadata.title,
+        deadline: streamingData.metadata.deadline || undefined,
+        type: "loading"
+      });
+
+      // 모달 열기
+      setIsModalOpen(true);
+    }
+  }, [streamingData.metadata, isInputLoading, displayColumns]);
+
+  // SSE 완료 시 대시보드 새로고침
+  useEffect(() => {
+    if (streamingData.isComplete && sseJobId) {
+      queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
+      setSseJobId(null);
+    }
+  }, [streamingData.isComplete, sseJobId, queryClient]);
+
+  // SSE 에러 처리
+  useEffect(() => {
+    if (streamingData.error) {
+      setIsInputLoading(false);
+      console.error("SSE Error:", streamingData.error);
+    }
+  }, [streamingData.error]);
+
+  const handleSseSubmit = (url: string) => {
+    setIsInputLoading(true);
+    startSummarize(url);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -378,6 +432,8 @@ export default function DashboardPage() {
     setIsModalOpen(false);
     setSelectedJob(null);
     setSelectedDashboardId(undefined);
+    setSseJobId(null);
+    resetSse();
   };
 
   const activeJob = activeId
@@ -429,12 +485,11 @@ export default function DashboardPage() {
               : [])
           ])}
         </div>
-        <FloatingActionButton
-          onClick={() => {
-            setSelectedJob({ id: -Date.now(), companyName: "" });
-            setSelectedDashboardId(Number(displayColumns[0]?.id));
-            setIsModalOpen(true);
-          }}
+        <FloatingInputButton
+          isOpen={isInputOpen}
+          onOpenChange={setIsInputOpen}
+          isLoading={isInputLoading}
+          onSubmit={handleSseSubmit}
         />
       </div>
     );
@@ -483,13 +538,13 @@ export default function DashboardPage() {
         dashboardId={selectedDashboardId}
         jobPostingId={selectedJob?.id && selectedJob.id > 0 ? selectedJob.id : undefined}
         initialData={initialModalData}
+        sseData={streamingData.metadata ? streamingData : undefined}
       />
-      <FloatingActionButton
-        onClick={() => {
-          setSelectedJob({ id: -Date.now(), companyName: "" });
-          setSelectedDashboardId(Number(displayColumns[0]?.id));
-          setIsModalOpen(true);
-        }}
+      <FloatingInputButton
+        isOpen={isInputOpen}
+        onOpenChange={setIsInputOpen}
+        isLoading={isInputLoading}
+        onSubmit={handleSseSubmit}
       />
     </div>
   );
