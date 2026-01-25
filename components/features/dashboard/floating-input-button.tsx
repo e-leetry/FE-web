@@ -37,6 +37,7 @@ export function FloatingInputButton({
 }: FloatingInputButtonProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [isInvalid, setIsInvalid] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,16 @@ export function FloatingInputButton({
 
   const handleSubmit = () => {
     if (inputValue.trim() && !isLoading) {
+      // URL 형식 검증
+      const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+
+      if (!urlPattern.test(inputValue.trim())) {
+        setIsInvalid(true);
+        setInputValue("");
+        return;
+      }
+
+      setIsInvalid(false);
       onSubmit?.(inputValue.trim());
     }
   };
@@ -101,15 +112,26 @@ export function FloatingInputButton({
       ) : (
         // 인풋 상태 (Variant2)
         <div className="relative">
-          <div className="bg-white w-[560px] rounded-[16px] flex items-center gap-4 px-5 py-[15px]">
+          <div
+            className={cn(
+              "bg-white w-[560px] rounded-[16px] flex items-center gap-4 px-5 py-[15px] transition-all duration-300",
+              isInvalid && "animate-shake border-2 border-[#F05552]"
+            )}
+          >
             <input
               ref={inputRef}
               type="text"
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                setIsInvalid(false);
+              }}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              className="flex-1 text-[16px] font-medium leading-[1.5] tracking-[-0.02em] text-[#2B2B2B] placeholder:text-[#9E9E9E] outline-none bg-transparent"
+              placeholder={isInvalid ? "올바른 형식의 링크를 입력해주세요" : placeholder}
+              className={cn(
+                "flex-1 text-[16px] font-medium leading-[1.5] tracking-[-0.02em] text-[#2B2B2B] outline-none bg-transparent",
+                isInvalid ? "placeholder:text-[#F05552]" : "placeholder:text-[#9E9E9E]"
+              )}
               disabled={isLoading}
             />
             {/* 등록 버튼 */}
@@ -129,21 +151,6 @@ export function FloatingInputButton({
                 submitLabel
               )}
             </button>
-          </div>
-          {/* 꼬리 (흰색) */}
-          <div className="absolute -bottom-[11px] left-1/2 -translate-x-1/2">
-            <svg
-              width="36"
-              height="21"
-              viewBox="0 0 36 21"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M15.5413 18.9174C16.8837 20.6955 19.1163 20.6955 20.4587 18.9174L35.25 0.75H0.75L15.5413 18.9174Z"
-                fill="#FFFFFF"
-              />
-            </svg>
           </div>
         </div>
       )}

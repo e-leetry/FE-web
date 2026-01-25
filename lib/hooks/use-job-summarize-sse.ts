@@ -67,19 +67,19 @@ export function useJobSummarizeSse() {
         onMainTasks: (text) => {
           setStreamingData((prev) => ({
             ...prev,
-            mainTasks: prev.mainTasks + text,
+            mainTasks: prev.mainTasks ? prev.mainTasks + " " + text : text,
           }));
         },
         onRequirements: (text) => {
           setStreamingData((prev) => ({
             ...prev,
-            requirements: prev.requirements + text,
+            requirements: prev.requirements ? prev.requirements + " " + text : text,
           }));
         },
         onPreferred: (text) => {
           setStreamingData((prev) => ({
             ...prev,
-            preferred: prev.preferred + text,
+            preferred: prev.preferred ? prev.preferred + " " + text : text,
           }));
         },
         onComplete: () => {
