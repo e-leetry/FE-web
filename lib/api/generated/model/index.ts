@@ -5,7 +5,6 @@ export * from './apiResponseJobSummaryResponse';
 export * from './apiResponseListDashboardResponse';
 export * from './apiResponseListUserResponse';
 export * from './apiResponseLong';
-export * from './apiResponseString';
 export * from './apiResponseUnit';
 export * from './apiResponseUserResponse';
 export * from './dashboardResponse';

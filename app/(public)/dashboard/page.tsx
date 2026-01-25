@@ -126,11 +126,21 @@ export default function DashboardPage() {
 
   const moveMutation = useMove({
     mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
+      onMutate: async () => {
+        // 진행 중인 refetch 취소
+        await queryClient.cancelQueries({ queryKey: getGetDashboardsQueryKey() });
+
+        // 현재 캐시 데이터 스냅샷 저장 (롤백용)
+        const previousData = queryClient.getQueryData(getGetDashboardsQueryKey());
+
+        return { previousData };
       },
-      onError: (error) => {
+      onError: (error, _variables, context) => {
         console.error("Move mutation failed:", error);
+        // 에러 시 이전 데이터로 롤백
+        if (context?.previousData) {
+          queryClient.setQueryData(getGetDashboardsQueryKey(), context.previousData);
+        }
       }
     }
   });
@@ -218,10 +228,37 @@ export default function DashboardPage() {
     const activeColumn = findColumn(activeId);
     const overColumn = findColumn(overId);
 
-    if (!activeColumn || !overColumn || activeColumn === overColumn) {
+    if (!activeColumn || !overColumn) {
       return;
     }
 
+    // 같은 컬럼 내에서 순서 변경
+    if (activeColumn === overColumn) {
+      setLocalColumns((prev) => {
+        const currentColumns = prev || columns;
+        const columnJobs = [...activeColumn.jobs];
+
+        const activeIndex = columnJobs.findIndex((job) => job.id === activeId);
+        const overIndex =
+          overColumn.id === overId
+            ? columnJobs.length - 1
+            : columnJobs.findIndex((job) => job.id === overId);
+
+        if (activeIndex === overIndex) return prev;
+
+        const newJobs = arrayMove(columnJobs, activeIndex, overIndex);
+
+        return currentColumns.map((col) => {
+          if (col.id === activeColumn.id) {
+            return { ...col, jobs: newJobs };
+          }
+          return col;
+        });
+      });
+      return;
+    }
+
+    // 다른 컬럼으로 이동
     setLocalColumns((prev) => {
       const currentColumns = prev || columns;
       const activeJobs = [...activeColumn.jobs];
@@ -259,7 +296,18 @@ export default function DashboardPage() {
     const activeId = active.id as number;
     const overId = over.id as number | string;
 
-    const overColumn = findColumn(overId);
+    // localColumns가 있으면 그것을 사용 (드래그 중 업데이트된 상태)
+    const currentColumns = localColumns || columns;
+
+    // 현재 상태에서 카드가 속한 컬럼 찾기
+    const findColumnInCurrent = (id: number | string) => {
+      if (currentColumns.some((col) => col.id === id)) {
+        return currentColumns.find((col) => col.id === id);
+      }
+      return currentColumns.find((col) => col.jobs.some((job) => job.id === id));
+    };
+
+    const overColumn = findColumnInCurrent(overId);
 
     if (!overColumn) {
       setActiveId(null);
@@ -268,29 +316,50 @@ export default function DashboardPage() {
       return;
     }
 
-    const overIndex =
-      overColumn.id === overId
-        ? overColumn.jobs.length
-        : overColumn.jobs.findIndex((job) => job.id === overId);
+    // 현재 카드의 위치 찾기 (이미 이동된 상태)
+    const currentCardIndex = overColumn.jobs.findIndex((job) => job.id === activeId);
 
-    const targetIndex = overIndex === -1 ? overColumn.jobs.length : overIndex;
+    // 원래 위치와 현재 위치 비교
+    const isSamePosition = originalColumnId === overColumn.id && originalIndex === currentCardIndex;
 
-    // 원래 위치(컬럼, 인덱스)와 드롭된 위치를 비교
-    const isSamePosition = originalColumnId === overColumn.id && originalIndex === targetIndex;
-
-    if (isSamePosition) {
+    if (isSamePosition || currentCardIndex === -1) {
       setActiveId(null);
       setOriginalColumnId(null);
       setOriginalIndex(null);
       return;
     }
 
+    // 현재 위치 기준으로 이전/이후 카드 ID 계산
+    const prevItemId = currentCardIndex > 0 ? overColumn.jobs[currentCardIndex - 1]?.id : undefined;
+    const nextItemId =
+      currentCardIndex < overColumn.jobs.length - 1
+        ? overColumn.jobs[currentCardIndex + 1]?.id
+        : undefined;
+
+    // Optimistic Update: 캐시를 현재 로컬 상태로 업데이트
+    queryClient.setQueryData(getGetDashboardsQueryKey(), () => {
+      return currentColumns.map((col) => ({
+        id: Number(col.id),
+        label: col.title,
+        jobPostings: col.jobs.map((job) => ({
+          id: job.id,
+          companyName: job.companyName,
+          title: job.title,
+          deadline: job.deadline
+        }))
+      }));
+    });
+
+    // 로컬 상태 초기화 (캐시 데이터 사용)
+    setLocalColumns(null);
+
     // API 호출
     moveMutation.mutate({
-      id: activeId,
+      summaryId: activeId,
       data: {
         dashboardId: Number(overColumn.id),
-        sortOrder: targetIndex
+        prevItemId,
+        nextItemId
       }
     });
 

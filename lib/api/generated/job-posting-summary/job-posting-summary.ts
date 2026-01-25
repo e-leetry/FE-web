@@ -98,6 +98,71 @@ export const useCreate = <TError = ErrorType<unknown>,
       return useMutation(getCreateMutationOptions(options), queryClient);
     }
     /**
+ * 채용 공고 요약의 대시보드 위치나 순서를 변경합니다.
+ * @summary 채용 공고 요약 이동
+ */
+export const move = (
+    summaryId: number,
+    jobPostingSummaryMoveRequest: BodyType<JobPostingSummaryMoveRequest>,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApiResponseUnit>(
+      {url: `/api/v1/job-posting-summaries/${summaryId}/move`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: jobPostingSummaryMoveRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getMoveMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof move>>, TError,{summaryId: number;data: BodyType<JobPostingSummaryMoveRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof move>>, TError,{summaryId: number;data: BodyType<JobPostingSummaryMoveRequest>}, TContext> => {
+
+const mutationKey = ['move'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof move>>, {summaryId: number;data: BodyType<JobPostingSummaryMoveRequest>}> = (props) => {
+          const {summaryId,data} = props ?? {};
+
+          return  move(summaryId,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MoveMutationResult = NonNullable<Awaited<ReturnType<typeof move>>>
+    export type MoveMutationBody = BodyType<JobPostingSummaryMoveRequest>
+    export type MoveMutationError = ErrorType<unknown>
+
+    /**
+ * @summary 채용 공고 요약 이동
+ */
+export const useMove = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof move>>, TError,{summaryId: number;data: BodyType<JobPostingSummaryMoveRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof move>>,
+        TError,
+        {summaryId: number;data: BodyType<JobPostingSummaryMoveRequest>},
+        TContext
+      > => {
+      return useMutation(getMoveMutationOptions(options), queryClient);
+    }
+    /**
  * ID로 채용 공고 요약 정보를 조회합니다.
  * @summary 채용 공고 요약 단건 조회
  */
@@ -314,70 +379,5 @@ export const useUpdate = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateMutationOptions(options), queryClient);
-    }
-    /**
- * 채용 공고 요약의 대시보드 위치나 순서를 변경합니다.
- * @summary 채용 공고 요약 이동
- */
-export const move = (
-    id: number,
-    jobPostingSummaryMoveRequest: BodyType<JobPostingSummaryMoveRequest>,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<ApiResponseUnit>(
-      {url: `/api/v1/job-posting-summaries/${id}/move`, method: 'PATCH',
-      headers: {'Content-Type': 'application/json', },
-      data: jobPostingSummaryMoveRequest, signal
-    },
-      options);
-    }
-  
-
-
-export const getMoveMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof move>>, TError,{id: number;data: BodyType<JobPostingSummaryMoveRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof move>>, TError,{id: number;data: BodyType<JobPostingSummaryMoveRequest>}, TContext> => {
-
-const mutationKey = ['move'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof move>>, {id: number;data: BodyType<JobPostingSummaryMoveRequest>}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  move(id,data,requestOptions)
-        }
-
-
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type MoveMutationResult = NonNullable<Awaited<ReturnType<typeof move>>>
-    export type MoveMutationBody = BodyType<JobPostingSummaryMoveRequest>
-    export type MoveMutationError = ErrorType<unknown>
-
-    /**
- * @summary 채용 공고 요약 이동
- */
-export const useMove = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof move>>, TError,{id: number;data: BodyType<JobPostingSummaryMoveRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof move>>,
-        TError,
-        {id: number;data: BodyType<JobPostingSummaryMoveRequest>},
-        TContext
-      > => {
-      return useMutation(getMoveMutationOptions(options), queryClient);
     }
     
