@@ -9,7 +9,8 @@ import { CSS } from "@dnd-kit/utilities";
 
 interface JobCardProps {
   id?: string | number;
-  type?: "white" | "loading" | "add";
+  type?: "default" | "loading" | "add";
+  size?: "M" | "S";
   companyName?: string;
   title?: string;
   deadline?: string;
@@ -19,39 +20,38 @@ interface JobCardProps {
 
 export function JobCard({
   id,
-  type = "white",
+  type = "default",
+  size = "M",
   companyName,
   title,
   deadline,
   className,
   onClick
 }: JobCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: id ?? "" });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: id ?? ""
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.3 : 1,
-    zIndex: isDragging ? 0 : undefined,
+    zIndex: isDragging ? 0 : undefined
   };
 
+  // type=add 카드
   if (type === "add") {
     return (
       <Card
         onClick={onClick}
         className={cn(
-          "flex h-[144px] w-[180px] shrink-0 cursor-pointer flex-row items-center justify-center gap-2 rounded-[16px] border-dashed border-[#D1D5DB] bg-transparent p-[20px] shadow-none hover:bg-slate-50 min-[1440px]:w-[236px]",
+          "flex shrink-0 cursor-pointer flex-row items-center justify-center gap-2 rounded-[16px] border-[1.5px] border-dashed border-[#DDDDDD] bg-transparent p-[16px_20px] shadow-[0px_2px_8px_rgba(0,0,0,0.05)] hover:bg-slate-50",
+          "w-[180px] min-[1440px]:w-[224px]",
+          size === "M" ? "h-[144px]" : "h-[80px]",
           className
         )}
       >
-        <span className="text-[16px] font-[500] leading-[19.09px] tracking-[-0.32px] text-[#A5A5A5]">
+        <span className="text-[16px] font-medium leading-[1.5] tracking-[-0.02em] text-[#A5A5A5]">
           채용공고 추가
         </span>
         <Image src="/images/dashboard/ico_add.svg" alt="Add" width={16} height={16} />
@@ -59,6 +59,7 @@ export function JobCard({
     );
   }
 
+  // type=loading 카드
   if (type === "loading") {
     return (
       <Card
@@ -68,31 +69,29 @@ export function JobCard({
         {...listeners}
         onClick={onClick}
         className={cn(
-          "flex h-[144px] w-[180px] shrink-0 cursor-pointer flex-col justify-between rounded-[16px] bg-white p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)] min-[1440px]:w-[236px]",
+          "flex shrink-0 cursor-pointer flex-col rounded-[16px] bg-white p-[16px_20px] shadow-[0px_2px_8px_rgba(0,0,0,0.05)]",
+          "w-[180px] min-[1440px]:w-[224px]",
+          size === "M" ? "h-[144px] justify-between" : "h-[80px] justify-between",
           className
         )}
       >
-        <div className="flex flex-col gap-[8px]">
-          <div className="flex items-center justify-between">
-            <span className="text-[16px] font-[600] leading-[24px] tracking-[-0.32px] text-[#343E4C]">
-              {companyName}
-            </span>
-            {id && (
-              <span className="text-[12px] text-gray-400">
-                #{id}
-              </span>
-            )}
-          </div>
-          <span className="text-[13px] font-[500] leading-[15.52px] tracking-[-0.26px] text-[#343E4C]">
+        {/* 회사명 영역 */}
+        <div className="flex flex-1 flex-col gap-[8px]">
+          <span className="text-[16px] font-semibold leading-[1.5] tracking-[-0.02em] text-[#3E3E3E]">
             {companyName}
           </span>
         </div>
-        <div className="flex items-center gap-[4px]">
-          <div className="flex h-5 w-5 items-center justify-center">
-            {/* Simple loading spinner placeholder or the image downloaded */}
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#343E4C] border-t-transparent" />
-          </div>
-          <span className="text-[14px] font-[400] leading-[16.71px] tracking-[-0.28px] text-[#343E4C]">
+
+        {/* 로딩 상태 표시 */}
+        <div className="flex items-center">
+          <Image
+            src="/images/dashboard/ico_ai.svg"
+            alt="AI"
+            width={24}
+            height={24}
+            className="animate-pulse"
+          />
+          <span className="text-[14px] font-normal leading-[1.19] tracking-[-0.02em] text-[#9E9E9E]">
             불러오는 중
           </span>
         </div>
@@ -100,6 +99,7 @@ export function JobCard({
     );
   }
 
+  // type=default 카드
   return (
     <Card
       ref={setNodeRef}
@@ -108,28 +108,46 @@ export function JobCard({
       {...listeners}
       onClick={onClick}
       className={cn(
-        "flex h-[144px] w-[180px] shrink-0 cursor-pointer flex-col justify-between rounded-[16px] bg-[#FAFAFA] p-[20px] shadow-[0px_2px_8px_rgba(0,0,0,0.04)] min-[1440px]:w-[236px]",
+        "relative flex shrink-0 cursor-pointer flex-col rounded-[16px] bg-white p-[16px_20px] shadow-[0px_2px_8px_rgba(0,0,0,0.05)]",
+        "w-[180px] min-[1440px]:w-[224px]",
+        size === "M" ? "h-[144px] justify-between gap-[16px]" : "gap-[4px]",
         className
       )}
     >
-      <div className="flex flex-col gap-[8px]">
-        <div className="flex items-center justify-between">
-          <span className="text-[16px] font-[600] leading-[24px] tracking-[-0.32px] text-[#343E4C]">
-            {companyName}
-          </span>
-          {id && (
-            <span className="text-[12px] text-gray-400">
-              #{id}
-            </span>
-          )}
-        </div>
-        <span className="text-[13px] font-[600] leading-[15.52px] tracking-[-0.26px] text-[#343E4C]">
+      {/* 회사명 & 직무명 영역 */}
+      <div className="flex flex-col gap-[4px]">
+        <span className="text-[16px] font-semibold leading-[1.5] tracking-[-0.02em] text-[#3E3E3E]">
           {title}
         </span>
+        <span
+          className={cn(
+            "text-[13px] font-medium leading-[1.5] tracking-[-0.02em] text-[#5C5C5C]",
+            size === "S" && "line-clamp-1"
+          )}
+        >
+          {companyName}
+        </span>
       </div>
-      <div className="text-[14px] font-[400] leading-[16.71px] tracking-[-0.28px] text-[#343E4C]">
-        -{deadline} 까지
+
+      {/* 옵션 버튼 (absolute 위치) */}
+      <div className="absolute right-[12px] top-[12px]">
+        <Image
+          src="/images/dashboard/ico_more.svg"
+          alt="More"
+          width={16}
+          height={16}
+          className="transition-opacity group-hover:opacity-100"
+        />
       </div>
+
+      {/* 마감일 - size=M일 때만 표시 */}
+      {size === "M" && deadline && (
+        <div className="flex items-center gap-[8px]">
+          <span className="text-[14px] font-normal leading-[1.19] tracking-[-0.02em] text-[#9E9E9E]">
+            -{deadline} 까지
+          </span>
+        </div>
+      )}
     </Card>
   );
 }

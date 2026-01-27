@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LoginModal } from "@/components/auth/login-modal";
 import { DimOverlay } from "@/components/ui/dim-overlay";
 
 export default function StartPage() {
+  const router = useRouter();
   const [link, setLink] = useState("");
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isInvalid, setIsInvalid] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -25,8 +25,10 @@ export default function StartPage() {
     }
 
     setIsInvalid(false);
-    // TODO: 등록 로직 구현
-    console.log("Registering link:", link);
+
+    // URL을 쿼리 파라미터로 전달하면서 대시보드로 이동
+    const encodedUrl = encodeURIComponent(link);
+    router.push(`/dashboard?jobUrl=${encodedUrl}`);
   };
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
@@ -13,6 +14,7 @@ import {
 import { useMove } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
 import { useQueryClient } from "@tanstack/react-query";
 import { useJobSummarizeContext } from "@/lib/context/job-summarize-context";
+import { useLocalDashboard, LocalJob } from "@/lib/hooks/use-local-dashboard";
 import {
   closestCorners,
   DndContext,
@@ -36,7 +38,7 @@ import {
 interface Job {
   id: number;
   companyName: string;
-  type?: "white" | "loading" | "add";
+  type?: "default" | "loading" | "add";
   title?: string;
   deadline?: string;
 }
@@ -48,31 +50,11 @@ interface Column {
 }
 
 const INITIAL_COLUMNS: Column[] = [
-  {
-    id: "interest",
-    title: "관심공고",
-    jobs: []
-  },
-  {
-    id: "applied",
-    title: "서류제출",
-    jobs: []
-  },
-  {
-    id: "interview1",
-    title: "1차면접",
-    jobs: []
-  },
-  {
-    id: "interview2",
-    title: "2차면접",
-    jobs: []
-  },
-  {
-    id: "final",
-    title: "최종합격",
-    jobs: []
-  }
+  { id: "interest", title: "관심공고", jobs: [] },
+  { id: "applied", title: "서류제출", jobs: [] },
+  { id: "interview1", title: "1차면접", jobs: [] },
+  { id: "interview2", title: "2차면접", jobs: [] },
+  { id: "final", title: "최종합격", jobs: [] }
 ];
 
 function KanbanColumn({
@@ -94,12 +76,12 @@ function KanbanColumn({
         items={column.jobs.map((job) => job.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div ref={setNodeRef} className="flex flex-1 flex-col gap-[16px] min-h-[200px]">
+        <div ref={setNodeRef} className="flex min-h-[200px] flex-1 flex-col gap-[16px]">
           {column.jobs.map((job) => (
             <JobCard
               key={job.id}
               id={job.id}
-              type={job.type || "white"}
+              type={job.type || "default"}
               companyName={job.companyName}
               title={job.title}
               deadline={job.deadline}
@@ -117,11 +99,28 @@ function KanbanColumn({
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { isLoggedIn } = useAuth();
   const queryClient = useQueryClient();
   const { streamingData, startSummarize, reset: resetSse } = useJobSummarizeContext();
+
+  // 로컬스토리지 훅 (비로그인 사용자용)
+  const {
+    columns: localStorageColumns,
+    isLoaded: isLocalLoaded,
+    addLoadingJob,
+    updateJob: updateLocalJob,
+    moveJob: moveLocalJob,
+    reorderJobs: reorderLocalJobs,
+    findJob: findLocalJob
+  } = useLocalDashboard();
+
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isInputLoading, setIsInputLoading] = useState(false);
+
+  // 온보딩에서 넘어온 URL 처리 여부 추적
+  const jobUrlProcessedRef = useRef(false);
 
   const { data: dashboardsData } = useGetDashboards({
     query: {
@@ -132,17 +131,12 @@ export default function DashboardPage() {
   const moveMutation = useMove({
     mutation: {
       onMutate: async () => {
-        // 진행 중인 refetch 취소
         await queryClient.cancelQueries({ queryKey: getGetDashboardsQueryKey() });
-
-        // 현재 캐시 데이터 스냅샷 저장 (롤백용)
         const previousData = queryClient.getQueryData(getGetDashboardsQueryKey());
-
         return { previousData };
       },
       onError: (error, _variables, context) => {
         console.error("Move mutation failed:", error);
-        // 에러 시 이전 데이터로 롤백
         if (context?.previousData) {
           queryClient.setQueryData(getGetDashboardsQueryKey(), context.previousData);
         }
@@ -150,7 +144,9 @@ export default function DashboardPage() {
     }
   });
 
+  // 컬럼 데이터 결정 (로그인 여부에 따라)
   const columns = useMemo<Column[]>(() => {
+    // 로그인 사용자: 서버 데이터 사용
     if (isLoggedIn && dashboardsData && dashboardsData.length > 0) {
       return dashboardsData.map((dashboard) => ({
         id: dashboard.id.toString(),
@@ -160,13 +156,28 @@ export default function DashboardPage() {
           companyName: jp.companyName,
           title: jp.title,
           deadline: jp.deadline,
-          type: "white" as const
+          type: "default" as const
+        }))
+      }));
+    }
+
+    // 비로그인 사용자: 로컬스토리지 데이터 사용
+    if (!isLoggedIn && isLocalLoaded) {
+      return localStorageColumns.map((col) => ({
+        id: col.id,
+        title: col.title,
+        jobs: col.jobs.map((job) => ({
+          id: job.id,
+          companyName: job.companyName,
+          title: job.title,
+          deadline: job.deadline,
+          type: job.type || ("default" as const)
         }))
       }));
     }
 
     return INITIAL_COLUMNS;
-  }, [isLoggedIn, dashboardsData]);
+  }, [isLoggedIn, dashboardsData, isLocalLoaded, localStorageColumns]);
 
   const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
   const [prevColumns, setPrevColumns] = useState<Column[]>(columns);
@@ -180,7 +191,7 @@ export default function DashboardPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [selectedDashboardId, setSelectedDashboardId] = useState<number | undefined>(undefined);
+  const [selectedColumnId, setSelectedColumnId] = useState<string | undefined>(undefined);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [originalColumnId, setOriginalColumnId] = useState<string | null>(null);
   const [originalIndex, setOriginalIndex] = useState<number | null>(null);
@@ -195,53 +206,116 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // 온보딩에서 넘어온 URL 처리
+  useEffect(() => {
+    if (!mounted || jobUrlProcessedRef.current) return;
+
+    const jobUrl = searchParams.get("jobUrl");
+    if (jobUrl) {
+      jobUrlProcessedRef.current = true;
+
+      // URL 쿼리 파라미터 제거
+      router.replace("/dashboard", { scroll: false });
+
+      // SSE 시작
+      startTransition(() => {
+        setIsInputLoading(true);
+      });
+      startSummarize(decodeURIComponent(jobUrl));
+    }
+  }, [mounted, searchParams, router, startSummarize]);
+
   // SSE 메타데이터 도착 시 처리
   useEffect(() => {
     if (streamingData.metadata && isInputLoading) {
-      setIsInputLoading(false);
-      setIsInputOpen(false);
+      startTransition(() => {
+        setIsInputLoading(false);
+        setIsInputOpen(false);
 
-      // 메타데이터에서 jobId 저장
-      setSseJobId(streamingData.metadata.jobId);
+        const jobId = streamingData.metadata!.jobId;
+        setSseJobId(jobId);
 
-      // 첫 번째 대시보드 ID (관심공고) 설정
-      const firstDashboardId = displayColumns[0]?.id ? Number(displayColumns[0].id) : undefined;
-      setSelectedDashboardId(firstDashboardId);
+        // 첫 번째 컬럼 ID (관심공고)
+        const firstColumnId = displayColumns[0]?.id || "interest";
+        setSelectedColumnId(firstColumnId);
 
-      // SSE용 임시 job 데이터 설정
-      setSelectedJob({
-        id: streamingData.metadata.jobId,
-        companyName: streamingData.metadata.companyName,
-        title: streamingData.metadata.title,
-        deadline: streamingData.metadata.deadline || undefined,
-        type: "loading"
+        // 비로그인 사용자: 로컬스토리지에 로딩 상태 Job 추가
+        if (!isLoggedIn) {
+          addLoadingJob(
+            {
+              id: jobId,
+              companyName: streamingData.metadata!.companyName,
+              title: streamingData.metadata!.title,
+              deadline: streamingData.metadata!.deadline || undefined
+            },
+            firstColumnId
+          );
+        }
+
+        // SSE용 임시 job 데이터 설정
+        setSelectedJob({
+          id: jobId,
+          companyName: streamingData.metadata!.companyName,
+          title: streamingData.metadata!.title,
+          deadline: streamingData.metadata!.deadline || undefined,
+          type: "loading"
+        });
+
+        // 모달 열기
+        setIsModalOpen(true);
       });
-
-      // 모달 열기
-      setIsModalOpen(true);
     }
-  }, [streamingData.metadata, isInputLoading, displayColumns]);
+  }, [streamingData.metadata, isInputLoading, displayColumns, isLoggedIn, addLoadingJob]);
 
-  // SSE 완료 시 대시보드 새로고침
+  // SSE 완료 시 처리
   useEffect(() => {
     if (streamingData.isComplete && sseJobId) {
-      queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
-      setSseJobId(null);
+      if (isLoggedIn) {
+        // 로그인 사용자: 서버 데이터 새로고침
+        queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
+      } else {
+        // 비로그인 사용자: 로컬스토리지 업데이트 (로딩 -> 완료)
+        updateLocalJob(sseJobId, {
+          hireProcess: streamingData.hireProcess,
+          mainTasks: streamingData.mainTasks,
+          requirements: streamingData.requirements,
+          preferred: streamingData.preferred
+        });
+      }
+
+      startTransition(() => {
+        setSseJobId(null);
+      });
     }
-  }, [streamingData.isComplete, sseJobId, queryClient]);
+  }, [
+    streamingData.isComplete,
+    streamingData.hireProcess,
+    streamingData.mainTasks,
+    streamingData.requirements,
+    streamingData.preferred,
+    sseJobId,
+    isLoggedIn,
+    queryClient,
+    updateLocalJob
+  ]);
 
   // SSE 에러 처리
   useEffect(() => {
     if (streamingData.error) {
-      setIsInputLoading(false);
+      startTransition(() => {
+        setIsInputLoading(false);
+      });
       console.error("SSE Error:", streamingData.error);
     }
   }, [streamingData.error]);
 
-  const handleSseSubmit = (url: string) => {
-    setIsInputLoading(true);
-    startSummarize(url);
-  };
+  const handleSseSubmit = useCallback(
+    (url: string) => {
+      setIsInputLoading(true);
+      startSummarize(url);
+    },
+    [startSummarize]
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -350,10 +424,8 @@ export default function DashboardPage() {
     const activeId = active.id as number;
     const overId = over.id as number | string;
 
-    // localColumns가 있으면 그것을 사용 (드래그 중 업데이트된 상태)
     const currentColumns = localColumns || columns;
 
-    // 현재 상태에서 카드가 속한 컬럼 찾기
     const findColumnInCurrent = (id: number | string) => {
       if (currentColumns.some((col) => col.id === id)) {
         return currentColumns.find((col) => col.id === id);
@@ -370,10 +442,7 @@ export default function DashboardPage() {
       return;
     }
 
-    // 현재 카드의 위치 찾기 (이미 이동된 상태)
     const currentCardIndex = overColumn.jobs.findIndex((job) => job.id === activeId);
-
-    // 원래 위치와 현재 위치 비교
     const isSamePosition = originalColumnId === overColumn.id && originalIndex === currentCardIndex;
 
     if (isSamePosition || currentCardIndex === -1) {
@@ -383,39 +452,49 @@ export default function DashboardPage() {
       return;
     }
 
-    // 현재 위치 기준으로 이전/이후 카드 ID 계산
-    const prevItemId = currentCardIndex > 0 ? overColumn.jobs[currentCardIndex - 1]?.id : undefined;
-    const nextItemId =
-      currentCardIndex < overColumn.jobs.length - 1
-        ? overColumn.jobs[currentCardIndex + 1]?.id
-        : undefined;
+    if (isLoggedIn) {
+      // 로그인 사용자: 서버 API 호출
+      const prevItemId =
+        currentCardIndex > 0 ? overColumn.jobs[currentCardIndex - 1]?.id : undefined;
+      const nextItemId =
+        currentCardIndex < overColumn.jobs.length - 1
+          ? overColumn.jobs[currentCardIndex + 1]?.id
+          : undefined;
 
-    // Optimistic Update: 캐시를 현재 로컬 상태로 업데이트
-    queryClient.setQueryData(getGetDashboardsQueryKey(), () => {
-      return currentColumns.map((col) => ({
-        id: Number(col.id),
-        label: col.title,
-        jobPostings: col.jobs.map((job) => ({
-          id: job.id,
-          companyName: job.companyName,
-          title: job.title,
-          deadline: job.deadline
-        }))
-      }));
-    });
+      queryClient.setQueryData(getGetDashboardsQueryKey(), () => {
+        return currentColumns.map((col) => ({
+          id: Number(col.id),
+          label: col.title,
+          jobPostings: col.jobs.map((job) => ({
+            id: job.id,
+            companyName: job.companyName,
+            title: job.title,
+            deadline: job.deadline
+          }))
+        }));
+      });
 
-    // 로컬 상태 초기화 (캐시 데이터 사용)
-    setLocalColumns(null);
+      setLocalColumns(null);
 
-    // API 호출
-    moveMutation.mutate({
-      summaryId: activeId,
-      data: {
-        dashboardId: Number(overColumn.id),
-        prevItemId,
-        nextItemId
+      moveMutation.mutate({
+        summaryId: activeId,
+        data: {
+          dashboardId: Number(overColumn.id),
+          prevItemId,
+          nextItemId
+        }
+      });
+    } else {
+      // 비로그인 사용자: 로컬스토리지 업데이트
+      if (originalColumnId === overColumn.id) {
+        // 같은 컬럼 내 순서 변경
+        reorderLocalJobs(overColumn.id, originalIndex!, currentCardIndex);
+      } else {
+        // 다른 컬럼으로 이동
+        moveLocalJob(activeId, overColumn.id, currentCardIndex);
       }
-    });
+      setLocalColumns(null);
+    }
 
     setActiveId(null);
     setOriginalColumnId(null);
@@ -424,14 +503,22 @@ export default function DashboardPage() {
 
   const handleCardClick = (job: Job, columnId: string) => {
     setSelectedJob(job);
-    setSelectedDashboardId(Number(columnId));
+    setSelectedColumnId(columnId);
     setIsModalOpen(true);
   };
+
+  // 모달에서 저장 시 호출 (비로그인 사용자용)
+  const handleSaveToLocal = useCallback(
+    (jobData: LocalJob) => {
+      updateLocalJob(jobData.id, jobData);
+    },
+    [updateLocalJob]
+  );
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedJob(null);
-    setSelectedDashboardId(undefined);
+    setSelectedColumnId(undefined);
     setSseJobId(null);
     resetSse();
   };
@@ -443,12 +530,15 @@ export default function DashboardPage() {
   const initialModalData = useMemo(() => {
     if (!selectedJob || selectedJob.id < 0) return null;
 
-    // selectedJob에는 id, companyName, title, deadline 등이 있음
-    // dashboardsData에서 더 상세한 정보를 찾을 수 있다면 좋지만,
-    // 현재 dashboardsData 구조상 jobPostings에 상세 정보가 포함되어 있음
-    const allJobs = dashboardsData?.flatMap((d) => d.jobPostings || []) || [];
-    return allJobs.find((jp) => jp.id === selectedJob.id);
-  }, [selectedJob, dashboardsData]);
+    if (isLoggedIn) {
+      // 로그인 사용자: 서버 데이터에서 찾기
+      const allJobs = dashboardsData?.flatMap((d) => d.jobPostings || []) || [];
+      return allJobs.find((jp) => jp.id === selectedJob.id);
+    } else {
+      // 비로그인 사용자: 로컬스토리지에서 찾기
+      return findLocalJob(selectedJob.id);
+    }
+  }, [selectedJob, dashboardsData, isLoggedIn, findLocalJob]);
 
   if (!mounted) {
     return (
@@ -457,12 +547,12 @@ export default function DashboardPage() {
           {displayColumns.flatMap((column, index) => [
             <div key={column.id} className="flex min-w-[180px] flex-1 flex-col gap-[16px]">
               <StatusHeader title={column.title} count={column.jobs.length} />
-              <div className="flex flex-1 flex-col gap-[16px] min-h-[200px]">
+              <div className="flex min-h-[200px] flex-1 flex-col gap-[16px]">
                 {column.jobs.map((job) => (
                   <JobCard
                     key={job.id}
                     id={job.id}
-                    type={job.type || "white"}
+                    type={job.type || "default"}
                     companyName={job.companyName}
                     title={job.title}
                     deadline={job.deadline}
@@ -522,7 +612,7 @@ export default function DashboardPage() {
           {activeJob ? (
             <JobCard
               id={activeJob.id}
-              type={activeJob.type || "white"}
+              type={activeJob.type || "default"}
               companyName={activeJob.companyName}
               title={activeJob.title}
               deadline={activeJob.deadline}
@@ -535,10 +625,12 @@ export default function DashboardPage() {
       <CardDetailModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        dashboardId={selectedDashboardId}
+        dashboardId={selectedColumnId ? Number(selectedColumnId) : undefined}
         jobPostingId={selectedJob?.id && selectedJob.id > 0 ? selectedJob.id : undefined}
         initialData={initialModalData}
         sseData={streamingData.metadata ? streamingData : undefined}
+        isLoggedIn={isLoggedIn}
+        onSaveToLocal={handleSaveToLocal}
       />
       <FloatingInputButton
         isOpen={isInputOpen}

@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Control, UseFormSetValue, useWatch, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,17 +24,16 @@ import {
   JobPostingSummaryUpdateRequestPlatform
 } from "@/lib/api/generated/model";
 import { SseStreamingData } from "@/lib/hooks/use-job-summarize-sse";
+import { LocalJob } from "@/lib/hooks/use-local-dashboard";
 
 const cardDetailSchema = z.object({
   companyName: z.string().min(1, "기업명을 입력해주세요"),
   jobTitle: z.string().min(1, "직무명을 입력해주세요"),
   jobUrl: z.string().url("올바른 URL 형식이 아닙니다").or(z.literal("")),
   process: z.string().min(1, "채용과정을 입력해주세요").or(z.literal("")),
-  deadline: z.string()
-    .min(1, "마감일을 입력해주세요")
-    .refine((val) => dayjs(val).isValid(), {
-      message: "유효한 날짜 형식이 아닙니다 (예: 2024-12-31)"
-    }),
+  deadline: z.string().refine((val) => val === "" || dayjs(val).isValid(), {
+    message: "유효한 날짜 형식이 아닙니다 (예: 2024-12-31)"
+  }),
   mainTasks: z.string().optional(),
   qualifications: z.string().optional(),
   preferences: z.string().optional(),
@@ -72,9 +71,7 @@ const RecruitmentInfoForm = ({
               {companyName || "기업명"}
             </span>
             <div className="w-[2px] h-4 bg-[#eee]" />
-            <span className="text-[28px] font-normal text-[#343e4c]">
-              {jobTitle || "직무명"}
-            </span>
+            <span className="text-[28px] font-normal text-[#343e4c]">{jobTitle || "직무명"}</span>
           </div>
           <button type="button" className="p-3 bg-[#eee] rounded-[6px] shrink-0">
             <div className="relative w-3 h-3">
@@ -224,6 +221,8 @@ interface CardDetailModalProps {
   jobPostingId?: number;
   initialData?: any;
   sseData?: SseStreamingData;
+  isLoggedIn?: boolean;
+  onSaveToLocal?: (jobData: LocalJob) => void;
 }
 
 export const CardDetailModal = ({
@@ -232,17 +231,24 @@ export const CardDetailModal = ({
   dashboardId,
   jobPostingId,
   initialData,
-  sseData
+  sseData,
+  isLoggedIn = true,
+  onSaveToLocal
 }: CardDetailModalProps) => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
   const { mutate: createSummary, isPending: isCreating } = useCreate();
   const { mutate: updateSummary, isPending: isUpdating } = useUpdate();
 
-  const { data: jobPostingData, isLoading: isFetching, refetch: summarize, isRefetching: isSummarizing } = useGetById(jobPostingId as number, {
+  const {
+    data: jobPostingData,
+    isLoading: isFetching,
+    refetch: summarize,
+    isRefetching: isSummarizing
+  } = useGetById(jobPostingId as number, {
     query: {
-      // SSE 모드가 아닐 때만 기존 데이터를 불러옴
-      enabled: !!jobPostingId && isOpen && !sseData
+      // 로그인 사용자이고 SSE 모드가 아닐 때만 기존 데이터를 불러옴
+      enabled: isLoggedIn && !!jobPostingId && isOpen && !sseData
     }
   });
 
@@ -280,32 +286,47 @@ export const CardDetailModal = ({
       setActiveTab("info");
     }, 0);
 
-    const dataToUse = jobPostingData || initialData;
+    const dataToUse = isLoggedIn ? jobPostingData || initialData : initialData;
 
     if (isEdit && dataToUse) {
-      // initialData 또는 jobPostingData를 기반으로 폼 초기화
-      let parsedContent = {
-        process: "",
-        mainTasks: "",
-        qualifications: "",
-        preferences: ""
-      };
+      // 비로그인 사용자의 로컬스토리지 데이터 형식 처리
+      if (!isLoggedIn) {
+        form.reset({
+          companyName: dataToUse.companyName || "",
+          jobTitle: dataToUse.title || "",
+          jobUrl: "",
+          process: dataToUse.hireProcess || "",
+          deadline: dataToUse.deadline || "",
+          mainTasks: dataToUse.mainTasks || "",
+          qualifications: dataToUse.requirements || "",
+          preferences: dataToUse.preferred || "",
+          memo: ""
+        });
+      } else {
+        // 로그인 사용자: 기존 서버 데이터 형식 처리
+        let parsedContent = {
+          process: "",
+          mainTasks: "",
+          qualifications: "",
+          preferences: ""
+        };
 
-      if (dataToUse.contentJson) {
-        parsedContent = dataToUse.contentJson as any;
+        if (dataToUse.contentJson) {
+          parsedContent = dataToUse.contentJson as any;
+        }
+
+        form.reset({
+          companyName: dataToUse.companyName || "",
+          jobTitle: dataToUse.title || "",
+          jobUrl: dataToUse.url || "",
+          process: parsedContent.process || "",
+          deadline: dataToUse.deadline || "",
+          mainTasks: parsedContent.mainTasks || "",
+          qualifications: parsedContent.qualifications || "",
+          preferences: parsedContent.preferences || "",
+          memo: dataToUse.memo || ""
+        });
       }
-
-      form.reset({
-        companyName: dataToUse.companyName || "",
-        jobTitle: dataToUse.title || "",
-        jobUrl: dataToUse.url || "",
-        process: parsedContent.process || "",
-        deadline: dataToUse.deadline || "",
-        mainTasks: parsedContent.mainTasks || "",
-        qualifications: parsedContent.qualifications || "",
-        preferences: parsedContent.preferences || "",
-        memo: dataToUse.memo || ""
-      });
     } else if (!isEdit) {
       form.reset({
         companyName: "",
@@ -321,43 +342,62 @@ export const CardDetailModal = ({
     }
 
     return () => clearTimeout(timer);
-  }, [isOpen, sseData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, sseData, isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // SSE 모드에서는 기존 초기화 로직 건너뛰기
     if (sseData) return;
 
-    if (isOpen && isEdit && (jobPostingData || initialData)) {
-      const dataToUse = jobPostingData || initialData;
-      let parsedContent = {
-        process: "",
-        mainTasks: "",
-        qualifications: "",
-        preferences: ""
-      };
+    const dataToUse = isLoggedIn ? jobPostingData || initialData : initialData;
 
-      if (dataToUse.contentJson) {
-        parsedContent = dataToUse.contentJson as any;
+    if (isOpen && isEdit && dataToUse) {
+      // 비로그인 사용자의 로컬스토리지 데이터 형식 처리
+      if (!isLoggedIn) {
+        form.reset({
+          companyName: dataToUse.companyName || "",
+          jobTitle: dataToUse.title || "",
+          jobUrl: "",
+          process: dataToUse.hireProcess || "",
+          deadline: dataToUse.deadline || "",
+          mainTasks: dataToUse.mainTasks || "",
+          qualifications: dataToUse.requirements || "",
+          preferences: dataToUse.preferred || "",
+          memo: ""
+        });
+      } else {
+        // 로그인 사용자: 기존 서버 데이터 형식 처리
+        let parsedContent = {
+          process: "",
+          mainTasks: "",
+          qualifications: "",
+          preferences: ""
+        };
+
+        if (dataToUse.contentJson) {
+          parsedContent = dataToUse.contentJson as any;
+        }
+
+        form.reset({
+          companyName: dataToUse.companyName || "",
+          jobTitle: dataToUse.title || "",
+          jobUrl: dataToUse.url || "",
+          process: parsedContent.process || "",
+          deadline: dataToUse.deadline || "",
+          mainTasks: parsedContent.mainTasks || "",
+          qualifications: parsedContent.qualifications || "",
+          preferences: parsedContent.preferences || "",
+          memo: dataToUse.memo || ""
+        });
       }
-
-      form.reset({
-        companyName: dataToUse.companyName || "",
-        jobTitle: dataToUse.title || "",
-        jobUrl: dataToUse.url || "",
-        process: parsedContent.process || "",
-        deadline: dataToUse.deadline || "",
-        mainTasks: parsedContent.mainTasks || "",
-        qualifications: parsedContent.qualifications || "",
-        preferences: parsedContent.preferences || "",
-        memo: dataToUse.memo || ""
-      });
     }
-  }, [jobPostingData, initialData, sseData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [jobPostingData, initialData, sseData, isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // SSE 메타데이터로 폼 초기화
   useEffect(() => {
     if (sseData?.metadata && isOpen) {
-      setActiveTab("info");
+      startTransition(() => {
+        setActiveTab("info");
+      });
       form.reset({
         companyName: sseData.metadata.companyName || "",
         jobTitle: sseData.metadata.title || "",
@@ -375,8 +415,8 @@ export const CardDetailModal = ({
   // 마크다운 리스트 형식으로 변환 (- 를 • 로 변환하고 줄바꿈 추가)
   const formatBulletList = (text: string) => {
     return text
-      .replace(/-/g, "\n• ")   // 모든 - 를 줄바꿈 + • 로 변환
-      .replace(/^\n• /, "• ")  // 맨 앞 줄바꿈 제거
+      .replace(/-/g, "\n• ") // 모든 - 를 줄바꿈 + • 로 변환
+      .replace(/^\n• /, "• ") // 맨 앞 줄바꿈 제거
       .trim();
   };
 
@@ -390,7 +430,9 @@ export const CardDetailModal = ({
         form.setValue("mainTasks", formatBulletList(sseData.mainTasks), { shouldDirty: true });
       }
       if (sseData.requirements) {
-        form.setValue("qualifications", formatBulletList(sseData.requirements), { shouldDirty: true });
+        form.setValue("qualifications", formatBulletList(sseData.requirements), {
+          shouldDirty: true
+        });
       }
       if (sseData.preferred) {
         form.setValue("preferences", formatBulletList(sseData.preferred), { shouldDirty: true });
@@ -408,6 +450,25 @@ export const CardDetailModal = ({
       preferences: values.preferences
     };
 
+    // 비로그인 사용자: 로컬스토리지에 저장
+    if (!isLoggedIn) {
+      if (onSaveToLocal && jobPostingId) {
+        onSaveToLocal({
+          id: jobPostingId,
+          companyName: values.companyName,
+          title: values.jobTitle,
+          deadline: values.deadline,
+          hireProcess: values.process,
+          mainTasks: values.mainTasks,
+          requirements: values.qualifications,
+          preferred: values.preferences
+        });
+      }
+      handleClose();
+      return;
+    }
+
+    // 로그인 사용자: 서버 API 호출
     if (isEdit && jobPostingId) {
       updateSummary(
         {
@@ -550,7 +611,13 @@ export const CardDetailModal = ({
             form="card-detail-form"
             className="flex-1 sm:flex-none"
           >
-            {isPending ? (isSseStreaming ? "요약 중..." : isFetching ? "로딩 중..." : "저장 중...") : "저장하기"}
+            {isPending
+              ? isSseStreaming
+                ? "요약 중..."
+                : isFetching
+                  ? "로딩 중..."
+                  : "저장 중..."
+              : "저장하기"}
           </Button>
         </div>
       }
@@ -585,7 +652,3 @@ export const CardDetailModal = ({
     </BaseModal>
   );
 };
-
-
-
-

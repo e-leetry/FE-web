@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "mcp__Figma__get_figma_data",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "mcp__Figma__download_figma_images",
+      "Bash(npx eslint:*)"
     ]
   },
   "enabledMcpjsonServers": [
