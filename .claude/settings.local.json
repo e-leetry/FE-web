@@ -5,7 +5,8 @@
       "Bash(npx tsc:*)",
       "mcp__Figma__download_figma_images",
       "Bash(npx eslint:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "WebFetch(domain:www.figma.com)"
     ]
   },
   "enabledMcpjsonServers": [
