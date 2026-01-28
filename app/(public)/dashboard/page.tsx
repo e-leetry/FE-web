@@ -6,6 +6,7 @@ import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
 import { FloatingInputButton } from "@/components/features/dashboard/floating-input-button";
+import { Toast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth/useAuth";
 import {
   useGetDashboards,
@@ -118,6 +119,7 @@ export default function DashboardPage() {
 
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isInputLoading, setIsInputLoading] = useState(false);
+  const [showErrorToast, setShowErrorToast] = useState(false);
 
   // 온보딩에서 넘어온 URL 처리 여부 추적
   const jobUrlProcessedRef = useRef(false);
@@ -304,6 +306,7 @@ export default function DashboardPage() {
     if (streamingData.error) {
       startTransition(() => {
         setIsInputLoading(false);
+        setShowErrorToast(true);
       });
       console.error("SSE Error:", streamingData.error);
     }
@@ -581,6 +584,15 @@ export default function DashboardPage() {
           isLoading={isInputLoading}
           onSubmit={handleSseSubmit}
         />
+
+        {/* 에러 토스트 */}
+        <Toast
+          visible={showErrorToast}
+          onClose={() => setShowErrorToast(false)}
+          variant="error"
+          leftElement="공고를 요약하지 못했어요"
+          rightElement="기능을 계속 넓히고 있어요"
+        />
       </div>
     );
   }
@@ -637,6 +649,15 @@ export default function DashboardPage() {
         onOpenChange={setIsInputOpen}
         isLoading={isInputLoading}
         onSubmit={handleSseSubmit}
+      />
+
+      {/* 에러 토스트 */}
+      <Toast
+        visible={showErrorToast}
+        onClose={() => setShowErrorToast(false)}
+        variant="error"
+        leftElement="공고를 요약하지 못했어요"
+        rightElement="기능을 계속 넓히고 있어요"
       />
     </div>
   );

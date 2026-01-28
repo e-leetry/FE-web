@@ -68,4 +68,28 @@
 - 모달은 Dialog, 드롭다운은 DropdownMenu 패턴을 따른다.
 - 직접 구현하지 말고 shadcn/ui 구조를 우선 사용한다.
 
+## Lint 규칙 (필수)
+
+코드 작성 시 반드시 `pnpm run lint`를 통과해야 한다. 다음 규칙을 준수한다:
+
+### React Hooks 규칙
+- useEffect, useCallback, useMemo 등의 의존성 배열을 정확히 작성한다.
+- useEffect 내에서 setState를 동기적으로 호출하지 않는다.
+  - BAD: `useEffect(() => { setState(value); }, [dep]);`
+  - GOOD: `useEffect(() => { setTimeout(() => setState(value), 0); }, [dep]);`
+- useRef의 `.current`를 렌더 중에 업데이트하지 않는다.
+  - BAD: `const ref = useRef(value); ref.current = newValue; // 렌더 중`
+  - GOOD: `useEffect(() => { ref.current = newValue; }, [newValue]);`
+
+### 일반 규칙
+- 익명 함수를 default export하지 않는다.
+  - BAD: `export default () => {}`
+  - GOOD: `const MyComponent = () => {}; export default MyComponent;`
+- 사용하지 않는 변수/import는 제거한다.
+- any 타입 사용을 피하고 명시적 타입을 사용한다.
+
+### 작업 완료 전 확인
+- 코드 작성 후 반드시 `pnpm run lint`를 실행하여 에러가 없는지 확인한다.
+- 린트 에러가 있으면 커밋하지 않고 수정한다.
+
 

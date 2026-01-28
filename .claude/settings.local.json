@@ -4,7 +4,8 @@
       "mcp__Figma__get_figma_data",
       "Bash(npx tsc:*)",
       "mcp__Figma__download_figma_images",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npm run lint:*)"
     ]
   },
   "enabledMcpjsonServers": [
