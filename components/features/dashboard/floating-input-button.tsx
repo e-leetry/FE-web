@@ -102,7 +102,7 @@ export function FloatingInputButton({
     <div
       ref={containerRef}
       className={cn(
-        "fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center",
+        "fixed bottom-10 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center",
         className
       )}
     >

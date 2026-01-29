@@ -9,6 +9,8 @@ export interface LocalJob {
   companyName: string;
   title?: string;
   deadline?: string;
+  /** 채용공고 원본 URL */
+  url?: string;
   type?: "default" | "loading";
   // SSE에서 받아온 상세 데이터
   hireProcess?: string;

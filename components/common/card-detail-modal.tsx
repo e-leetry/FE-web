@@ -2,21 +2,23 @@
 
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { startTransition, useEffect, useState } from "react";
+import { ReactNode, startTransition, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Control, UseFormSetValue, useWatch, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import dayjs from "dayjs";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { FormTextArea } from "./form-text-area";
 import { BaseModal } from "./base-modal";
 import { FormInput } from "@/components/common/form-input";
-import { Button } from "@/components/ui/button";
+import { CardDetailFooter, CardDetailFooterProps } from "@/components/common/card-detail-footer";
 import {
   useCreate,
   useUpdate,
-  useGetById
+  useGetById,
+  useDelete
 } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
 import { getGetDashboardsQueryKey } from "@/lib/api/generated/dashboard/dashboard";
 import {
@@ -223,6 +225,8 @@ interface CardDetailModalProps {
   sseData?: SseStreamingData;
   isLoggedIn?: boolean;
   onSaveToLocal?: (jobData: LocalJob) => void;
+  onDeleteLocal?: (jobId: number) => void;
+  footer?: ReactNode | ((props: CardDetailFooterProps) => ReactNode);
 }
 
 export const CardDetailModal = ({
@@ -233,12 +237,15 @@ export const CardDetailModal = ({
   initialData,
   sseData,
   isLoggedIn = true,
-  onSaveToLocal
+  onSaveToLocal,
+  onDeleteLocal,
+  footer
 }: CardDetailModalProps) => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
   const { mutate: createSummary, isPending: isCreating } = useCreate();
   const { mutate: updateSummary, isPending: isUpdating } = useUpdate();
+  const { mutate: deleteSummary, isPending: isDeleting } = useDelete();
 
   const {
     data: jobPostingData,
@@ -441,6 +448,7 @@ export const CardDetailModal = ({
   }, [sseData?.hireProcess, sseData?.mainTasks, sseData?.requirements, sseData?.preferred, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isSseStreaming = sseData?.isStreaming || false;
+  const FORM_ID = "card-detail-form";
 
   const onSubmit = (values: CardDetailValues) => {
     const contentJson = {
@@ -525,21 +533,66 @@ export const CardDetailModal = ({
     }
   };
 
-  if (!isOpen) return null;
-
   const handleClose = () => {
     form.reset();
     onClose();
   };
 
+  const handleDelete = () => {
+    if (!jobPostingId) return;
+
+    if (!isLoggedIn) {
+      if (onDeleteLocal) {
+        onDeleteLocal(jobPostingId);
+      }
+      handleClose();
+      return;
+    }
+
+    deleteSummary(
+      { id: jobPostingId },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
+          handleClose();
+        },
+        onError: (error) => {
+          console.error("채용 공고 요약 삭제 실패:", error);
+        }
+      }
+    );
+  };
+
+  if (!isOpen) return null;
+
   const labelClass = "text-[16px] font-bold text-[#727272] mb-[12px] block";
 
-  const isPending = isCreating || isUpdating || isFetching || isSseStreaming;
+  const isPending = isCreating || isUpdating || isFetching || isSseStreaming || isDeleting;
 
   const navItemBaseClass =
     "flex flex-col items-center justify-center w-[72px] h-[72px] rounded-[12px] cursor-pointer transition-colors gap-1";
   const activeNavItemClass = "bg-[#F3F3F3] text-[#282828] font-bold";
   const inactiveNavItemClass = "text-[#727272] hover:bg-[#F3F3F3]/50";
+
+  const footerStatus: CardDetailFooterProps["status"] =
+    isFetching || isSseStreaming ? "loading" : "default";
+
+  const footerProps: CardDetailFooterProps = {
+    isPending,
+    isSseStreaming,
+    isFetching,
+    onClose: handleClose,
+    formId: FORM_ID,
+    status: footerStatus,
+    showDelete: isEdit,
+    onDelete: handleDelete,
+    isDeletePending: isDeleting
+  };
+
+  const defaultFooter = <CardDetailFooter {...footerProps} />;
+
+  const resolvedFooter =
+    typeof footer === "function" ? footer(footerProps) : footer ?? defaultFooter;
 
   return (
     <BaseModal
@@ -592,39 +645,12 @@ export const CardDetailModal = ({
         </>
       }
       footer={
-        <div className="flex gap-2 w-full sm:w-auto justify-end">
-          <Button
-            type="button"
-            color="neutral"
-            size="xl"
-            disabled={isPending}
-            onClick={handleClose}
-            className="flex-1 sm:flex-none"
-          >
-            닫기
-          </Button>
-          <Button
-            type="submit"
-            color="primary"
-            size="xl"
-            disabled={isPending}
-            form="card-detail-form"
-            className="flex-1 sm:flex-none"
-          >
-            {isPending
-              ? isSseStreaming
-                ? "요약 중..."
-                : isFetching
-                  ? "로딩 중..."
-                  : "저장 중..."
-              : "저장하기"}
-          </Button>
-        </div>
+        resolvedFooter
       }
     >
       <Form {...form}>
         <form
-          id="card-detail-form"
+          id={FORM_ID}
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col"
         >

@@ -42,6 +42,7 @@ interface Job {
   type?: "default" | "loading" | "add";
   title?: string;
   deadline?: string;
+  url?: string;
 }
 
 interface Column {
@@ -86,6 +87,7 @@ function KanbanColumn({
               companyName={job.companyName}
               title={job.title}
               deadline={job.deadline}
+              url={job.url}
               onClick={() => handleCardClick(job, column.id)}
             />
           ))}
@@ -114,7 +116,8 @@ export default function DashboardPage() {
     updateJob: updateLocalJob,
     moveJob: moveLocalJob,
     reorderJobs: reorderLocalJobs,
-    findJob: findLocalJob
+    findJob: findLocalJob,
+    removeJob: removeLocalJob
   } = useLocalDashboard();
 
   const [isInputOpen, setIsInputOpen] = useState(false);
@@ -158,6 +161,7 @@ export default function DashboardPage() {
           companyName: jp.companyName,
           title: jp.title,
           deadline: jp.deadline,
+          url: jp.url,
           type: "default" as const
         }))
       }));
@@ -173,6 +177,7 @@ export default function DashboardPage() {
           companyName: job.companyName,
           title: job.title,
           deadline: job.deadline,
+          url: job.url,
           type: job.type || ("default" as const)
         }))
       }));
@@ -248,7 +253,8 @@ export default function DashboardPage() {
               id: jobId,
               companyName: streamingData.metadata!.companyName,
               title: streamingData.metadata!.title,
-              deadline: streamingData.metadata!.deadline || undefined
+              deadline: streamingData.metadata!.deadline || undefined,
+              url: streamingData.metadata!.originalUrl
             },
             firstColumnId
           );
@@ -518,6 +524,13 @@ export default function DashboardPage() {
     [updateLocalJob]
   );
 
+  const handleDeleteLocal = useCallback(
+    (jobId: number) => {
+      removeLocalJob(jobId);
+    },
+    [removeLocalJob]
+  );
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedJob(null);
@@ -559,6 +572,7 @@ export default function DashboardPage() {
                     companyName={job.companyName}
                     title={job.title}
                     deadline={job.deadline}
+                    url={job.url}
                     onClick={() => handleCardClick(job, column.id)}
                   />
                 ))}
@@ -628,6 +642,7 @@ export default function DashboardPage() {
               companyName={activeJob.companyName}
               title={activeJob.title}
               deadline={activeJob.deadline}
+              url={activeJob.url}
               className="rotate-3 scale-105 shadow-xl transition-transform"
             />
           ) : null}
@@ -643,6 +658,7 @@ export default function DashboardPage() {
         sseData={streamingData.metadata ? streamingData : undefined}
         isLoggedIn={isLoggedIn}
         onSaveToLocal={handleSaveToLocal}
+        onDeleteLocal={handleDeleteLocal}
       />
       <FloatingInputButton
         isOpen={isInputOpen}

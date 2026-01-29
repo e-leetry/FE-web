@@ -14,6 +14,8 @@ interface JobCardProps {
   companyName?: string;
   title?: string;
   deadline?: string;
+  /** 채용공고 원본 URL */
+  url?: string;
   className?: string;
   onClick?: () => void;
 }
@@ -25,6 +27,7 @@ export function JobCard({
   companyName,
   title,
   deadline,
+  url,
   className,
   onClick
 }: JobCardProps) {
@@ -117,7 +120,7 @@ export function JobCard({
       {/* 회사명 & 직무명 영역 */}
       <div className="flex flex-col gap-[4px]">
         <span className="text-[16px] font-semibold leading-[1.5] tracking-[-0.02em] text-[#3E3E3E]">
-          {title}
+          {companyName}
         </span>
         <span
           className={cn(
@@ -125,20 +128,29 @@ export function JobCard({
             size === "S" && "line-clamp-1"
           )}
         >
-          {companyName}
+          {title}
         </span>
       </div>
 
-      {/* 옵션 버튼 (absolute 위치) */}
-      <div className="absolute right-[12px] top-[12px]">
-        <Image
-          src="/images/dashboard/ico_more.svg"
-          alt="More"
-          width={16}
-          height={16}
-          className="transition-opacity group-hover:opacity-100"
-        />
-      </div>
+      {/* 공고 바로가기 버튼 (absolute 위치) */}
+      {url && (
+        <button
+          className="absolute right-[12px] top-[12px] p-1 hover:bg-gray-100 rounded transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(url, "_blank", "noopener,noreferrer");
+          }}
+          aria-label="채용공고 바로가기"
+        >
+          <Image
+            src="/images/dashboard/ico_more.svg"
+            alt="More"
+            width={16}
+            height={16}
+            className="transition-opacity group-hover:opacity-100"
+          />
+        </button>
+      )}
 
       {/* 마감일 - size=M일 때만 표시 */}
       {size === "M" && deadline && (
