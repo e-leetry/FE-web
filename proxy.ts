@@ -46,6 +46,9 @@ export async function proxy(request: NextRequest) {
   const cookieValue = request.cookies.get(sessionCookieName)?.value;
 
   if (!isLoggedInFromCookie(cookieValue)) {
+    if (pathname === "/dashboard") {
+      return NextResponse.redirect(new URL("/guest/dashboard", request.url));
+    }
     const loginUrl = new URL(LOGIN_PATH, request.url);
     loginUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(loginUrl);

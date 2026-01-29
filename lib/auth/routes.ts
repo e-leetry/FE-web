@@ -2,16 +2,25 @@ export const LOGIN_PATH = "/login";
 export const AUTH_CALLBACK_PREFIX = "/auth/callback";
 export const COMPONENTS = "/components";
 
-export const publicRoutes = ["/", LOGIN_PATH, AUTH_CALLBACK_PREFIX, COMPONENTS, "/onboarding", "/dashboard", "/guest/dashboard"];
+export const publicRoutes = [
+  "/",
+  LOGIN_PATH,
+  AUTH_CALLBACK_PREFIX,
+  COMPONENTS,
+  "/onboarding",
+  "/guest/dashboard"
+];
 export const authRoutes = [LOGIN_PATH];
 
 export const oauthProviders = ["google", "apple", "kakao"] as const;
 export type OAuthProvider = (typeof oauthProviders)[number];
 
-const dynamicRoutePrefixes = new Set([AUTH_CALLBACK_PREFIX]);
+const dynamicRoutePrefixes = new Set([AUTH_CALLBACK_PREFIX, "/guest"]);
 
 export function isPublicRoute(pathname: string) {
-  return publicRoutes.some((route) => matchesRoute(pathname, route));
+  return (
+    publicRoutes.some((route) => matchesRoute(pathname, route)) || pathname.startsWith("/guest")
+  );
 }
 
 export function matchesRoute(pathname: string, candidate: string) {

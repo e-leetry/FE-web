@@ -21,13 +21,6 @@ export default function DashboardPage() {
   const { isLoggedIn } = useAuth();
   const queryClient = useQueryClient();
 
-  // 비로그인 사용자는 비회원 페이지로 리다이렉트
-  useEffect(() => {
-    if (!isLoggedIn) {
-      router.replace("/guest/dashboard");
-    }
-  }, [isLoggedIn, router]);
-
   const { data: dashboardsData } = useGetDashboards({
     query: {
       enabled: isLoggedIn
