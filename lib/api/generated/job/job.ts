@@ -224,4 +224,74 @@ export const useSummarizeSse = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getSummarizeSseMutationOptions(options), queryClient);
     }
+    /**
+ * 
+            URL을 통해 채용 공고 메타데이터만 즉시 전송하고, 요약이 완료되면 완료 신호만 반환합니다.
+            
+            이벤트 타입:
+            - metadata: 기업명, 직무명, 채용링크, 마감일 (JSON, 즉시 전송)
+            - complete: 완료 신호 (JSON, 요약 완료 시 전송)
+        
+ * @summary 채용 공고 요약 SSE (메타데이터·완료 알림)
+ */
+export const summarizeSseMetadataOnly = (
+    jobSummarizeRequest: BodyType<JobSummarizeRequest>,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ServerSentEventString[]>(
+      {url: `/api/v1/jobs/summarize/sse/metadata`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: jobSummarizeRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getSummarizeSseMetadataOnlyMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof summarizeSseMetadataOnly>>, TError,{data: BodyType<JobSummarizeRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof summarizeSseMetadataOnly>>, TError,{data: BodyType<JobSummarizeRequest>}, TContext> => {
+
+const mutationKey = ['summarizeSseMetadataOnly'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof summarizeSseMetadataOnly>>, {data: BodyType<JobSummarizeRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  summarizeSseMetadataOnly(data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SummarizeSseMetadataOnlyMutationResult = NonNullable<Awaited<ReturnType<typeof summarizeSseMetadataOnly>>>
+    export type SummarizeSseMetadataOnlyMutationBody = BodyType<JobSummarizeRequest>
+    export type SummarizeSseMetadataOnlyMutationError = ErrorType<unknown>
+
+    /**
+ * @summary 채용 공고 요약 SSE (메타데이터·완료 알림)
+ */
+export const useSummarizeSseMetadataOnly = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof summarizeSseMetadataOnly>>, TError,{data: BodyType<JobSummarizeRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof summarizeSseMetadataOnly>>,
+        TError,
+        {data: BodyType<JobSummarizeRequest>},
+        TContext
+      > => {
+      return useMutation(getSummarizeSseMetadataOnlyMutationOptions(options), queryClient);
+    }
     
