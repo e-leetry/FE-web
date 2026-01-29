@@ -8,6 +8,7 @@
 - **상태 관리**
   - 서버 상태: React Query
   - 클라이언트 전역 상태: Zustand
+- nextjs16부터 middleware.ts 파일은 proxy.ts 로 대체되었음
 
 ---
 
