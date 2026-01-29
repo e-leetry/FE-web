@@ -54,7 +54,8 @@ const apiFetch = async <T>(
 
   // AbortController로 타임아웃 처리
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const isStream = parseAs === "stream";
+  const timeoutId = isStream ? undefined : setTimeout(() => controller.abort(), timeout);
 
   // 외부에서 전달된 signal과 내부 타임아웃 signal 결합
   if (options?.signal) {
@@ -112,6 +113,13 @@ const apiFetch = async <T>(
       return null as T;
     }
 
+    // stream 응답 처리
+    if (isStream) {
+      const duration = Date.now() - startTime;
+      logResponse(method, endpoint, "Stream Response", duration);
+      return response as unknown as T;
+    }
+
     // text 응답 처리
     if (parseAs === "text") {
       const text = await response.text();
@@ -161,7 +169,9 @@ const apiFetch = async <T>(
     logError(method, endpoint, error);
     throw new ApiClientError(500, "UNKNOWN_ERROR", "알 수 없는 오류가 발생했습니다.");
   } finally {
-    clearTimeout(timeoutId);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
   }
 };
 

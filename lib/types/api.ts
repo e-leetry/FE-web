@@ -24,7 +24,7 @@ export class ApiClientError extends Error {
 }
 
 // 응답 파싱 타입
-export type ParseAs = "json" | "text";
+export type ParseAs = "json" | "text" | "stream";
 
 // 요청 옵션 타입
 export interface RequestOptions {
