@@ -106,31 +106,53 @@ const RecruitmentInfoForm = ({
         <div className="flex justify-between items-end">
           <label className={labelClass}>채용링크</label>
         </div>
-        <div className="flex gap-2">
-          <FormInput
-            control={control}
-            name="jobUrl"
-            label=""
-            className="flex-1"
-            labelClassName="hidden"
-            placeholder="원티드, 잡코리아 등 채용공고 주소를 입력해요"
-          />
-          {isEdit && (
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="h-[64px] rounded-[12px] border-2 border-[#eee] text-[#5c646f] font-medium gap-1 px-4"
-              onClick={onSummarize}
-              disabled={isSummarizing}
-            >
-              <div className="relative w-5 h-5">
-                <Image src="/images/icon/ico_link.svg" alt="link" fill />
+        <FormInput
+          control={control}
+          name="jobUrl"
+          label=""
+          className="flex-1"
+          labelClassName="hidden"
+          placeholder="원티드, 잡코리아 등 채용공고 주소를 입력해요"
+          rightElement={
+            isEdit ? (
+              <div className="relative group">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  className="h-[44px] rounded-[10px] border-[1.5px] border-[#eeeeee] text-[#5c646f] font-medium gap-1 px-4 shadow-[0px_1px_4px_rgba(0,0,0,0.04)]"
+                  onClick={onSummarize}
+                  disabled={isSummarizing}
+                  isLoading={isSummarizing}
+                >
+                  <div className="relative w-[18px] h-[18px]">
+                    <Image src="/images/icon/ico_link.svg" alt="link" fill />
+                  </div>
+                  {isSummarizing ? "불러오는 중..." : "공고 불러오기"}
+                </Button>
+
+                <div className="pointer-events-none absolute left-1/2 bottom-full z-10 mb-2 -translate-x-1/2 flex flex-col items-center opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150">
+                  <div className="flex items-center justify-center rounded-[8px] bg-[rgba(40,40,40,0.72)] backdrop-blur-[8px] shadow-[0px_2px_8px_rgba(0,0,0,0.05)] px-2 py-1.5">
+                    <span className="text-[14px] font-medium leading-[1.1935] tracking-[-0.02em] text-white whitespace-nowrap">
+                      불러오면 내용이 초기화돼요
+                    </span>
+                  </div>
+                  <svg
+                    width="16"
+                    height="9"
+                    viewBox="0 0 16 9"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-[rgba(40,40,40,0.72)]"
+                  >
+                    <path d="M0 0H16L8 9Z" fill="currentColor" />
+                  </svg>
+                </div>
               </div>
-              {isSummarizing ? "불러오는 중..." : "공고 불러오기"}
-            </Button>
-          )}
-        </div>
+            ) : null
+          }
+          rightPaddingClassName="pr-[180px]"
+          rightElementClassName="right-3"
+        />
       </div>
 
       <div className="flex gap-4">

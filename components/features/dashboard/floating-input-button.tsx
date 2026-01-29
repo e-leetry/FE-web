@@ -45,6 +45,10 @@ export function FloatingInputButton({
   const setIsOpen = (open: boolean) => {
     setInternalIsOpen(open);
     onOpenChange?.(open);
+    if (!open) {
+      setInputValue("");
+      setIsInvalid(false);
+    }
   };
 
   const handleButtonClick = () => {
