@@ -20,6 +20,28 @@ interface JobCardProps {
   onClick?: () => void;
 }
 
+const formatDeadline = (deadline?: string) => {
+  if (!deadline) return "";
+
+  const digitsOnly = deadline.replace(/[^0-9]/g, "");
+
+  if (digitsOnly.length < 6) {
+    return deadline.trim();
+  }
+
+  const normalized = digitsOnly.length >= 8 ? digitsOnly.slice(-8) : digitsOnly.slice(-6);
+
+  const year = normalized.length === 8 ? normalized.slice(2, 4) : normalized.slice(0, 2);
+  const month = normalized.length === 8 ? normalized.slice(4, 6) : normalized.slice(2, 4);
+  const day = normalized.length === 8 ? normalized.slice(6, 8) : normalized.slice(4, 6);
+
+  if (!year || !month || !day) {
+    return deadline.trim();
+  }
+
+  return `${year}. ${month.padStart(2, "0")}. ${day.padStart(2, "0")}`;
+};
+
 export function JobCard({
   id,
   type = "default",
@@ -34,6 +56,8 @@ export function JobCard({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: id ?? ""
   });
+
+  const formattedDeadline = formatDeadline(deadline);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -153,10 +177,10 @@ export function JobCard({
       )}
 
       {/* 마감일 - size=M일 때만 표시 */}
-      {size === "M" && deadline && (
+      {size === "M" && formattedDeadline && (
         <div className="flex items-center gap-[8px]">
           <span className="text-[14px] font-normal leading-[1.19] tracking-[-0.02em] text-[#9E9E9E]">
-            -{deadline} 까지
+            -{formattedDeadline} 까지
           </span>
         </div>
       )}
