@@ -28,7 +28,7 @@ export default function StartPage() {
 
     // URL을 쿼리 파라미터로 전달하면서 대시보드로 이동
     const encodedUrl = encodeURIComponent(link);
-    router.push(`/dashboard?jobUrl=${encodedUrl}`);
+    router.push(`/guest/dashboard?jobUrl=${encodedUrl}`);
   };
 
   return (
@@ -49,7 +49,11 @@ export default function StartPage() {
             >
               <Input
                 type="text"
-                placeholder={isInvalid ? "올바른 형식의 링크를 입력해주세요" : "등록할 채용 공고의 링크를 입력해주세요"}
+                placeholder={
+                  isInvalid
+                    ? "올바른 형식의 링크를 입력해주세요"
+                    : "등록할 채용 공고의 링크를 입력해주세요"
+                }
                 value={link}
                 onChange={(e) => {
                   setLink(e.target.value);

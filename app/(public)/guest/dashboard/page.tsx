@@ -36,6 +36,16 @@ export default function GuestDashboardPage() {
     removeJob: removeLocalJob
   } = useLocalDashboard();
 
+  // 잡 카드가 하나도 없으면 온보딩으로 이동
+  useEffect(() => {
+    if (isLocalLoaded) {
+      const totalJobs = localStorageColumns.reduce((acc, col) => acc + col.jobs.length, 0);
+      if (totalJobs === 0) {
+        router.replace("/onboarding");
+      }
+    }
+  }, [isLocalLoaded, localStorageColumns, router]);
+
   // 컬럼 데이터 (로컬스토리지)
   const columns = useMemo<Column[]>(() => {
     if (isLocalLoaded) {
@@ -59,7 +69,12 @@ export default function GuestDashboardPage() {
   const handleSseMetadata = useCallback(
     (
       jobId: number,
-      metadata: { companyName: string; title: string; deadline?: string | null; originalUrl: string },
+      metadata: {
+        companyName: string;
+        title: string;
+        deadline?: string | null;
+        originalUrl: string;
+      },
       firstColumnId: string
     ) => {
       addLoadingJob(
