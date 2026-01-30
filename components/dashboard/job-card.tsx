@@ -71,9 +71,9 @@ export function JobCard({
     ? undefined
     : {
         transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.3 : 1,
-        zIndex: isDragging ? 0 : undefined
+        transition: isDragging ? "none" : transition,
+        opacity: isDragging ? 0 : 1,
+        zIndex: isDragging ? -1 : undefined
       };
 
   // type=add 카드

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
@@ -9,6 +9,14 @@ import { FloatingInputButton } from "@/components/features/dashboard/floating-in
 import { LocalJob } from "@/lib/hooks/use-local-dashboard";
 import type { SseStreamingData } from "@/lib/hooks/use-job-summarize-sse";
 import { showToast } from "@/store/ui/toast-store";
+import {
+  findColumnByIdOrJob,
+  reorderJobsInColumn,
+  moveJobBetweenColumns,
+  isSameDropPosition,
+  findJobIndexInColumn
+} from "@/lib/utils/kanban-utils";
+import type { Job, Column } from "@/lib/utils/kanban-utils";
 import {
   closestCorners,
   DndContext,
@@ -23,26 +31,12 @@ import {
   useSensors
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
 
-export interface Job {
-  id: number;
-  companyName: string;
-  type?: "default" | "loading" | "add";
-  title?: string;
-  deadline?: string;
-  url?: string;
-}
-
-export interface Column {
-  id: string;
-  title: string;
-  jobs: Job[];
-}
+export type { Job, Column } from "@/lib/utils/kanban-utils";
 
 interface DashboardBoardProps {
   columns: Column[];
@@ -160,6 +154,7 @@ export function DashboardBoard({
   const displayColumns = localColumns || columns;
 
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [activeJob, setActiveJob] = useState<Job | null>(null);
   const [originalColumnId, setOriginalColumnId] = useState<string | null>(null);
   const [originalIndex, setOriginalIndex] = useState<number | null>(null);
 
@@ -174,24 +169,28 @@ export function DashboardBoard({
     })
   );
 
-  const findColumn = useCallback(
-    (id: number | string) => {
-      if (displayColumns.some((col) => col.id === id)) {
-        return displayColumns.find((col) => col.id === id);
-      }
-      return displayColumns.find((col) => col.jobs.some((job) => job.id === id));
-    },
-    [displayColumns]
-  );
-
   const handleDragStart = (event: DragStartEvent) => {
-    const dragActiveId = Number(event.active.id);
+    const rawId = event.active.id;
+
+    // 문자열 ID(add 카드)는 드래그 대상이 아님
+    if (typeof rawId === "string" && rawId.startsWith("add-")) {
+      return;
+    }
+
+    const dragActiveId = typeof rawId === "number" ? rawId : Number(rawId);
+    if (isNaN(dragActiveId)) return;
+
+    // 드래그 시작 시 activeJob을 저장 (드래그 중 columns가 변경되어도 유지)
+    const job = displayColumns.flatMap((col) => col.jobs).find((j) => j.id === dragActiveId);
+    if (!job) return;
+
+    setActiveJob(job);
     setActiveId(dragActiveId);
 
-    const activeColumn = findColumn(dragActiveId);
+    const activeColumn = findColumnByIdOrJob(displayColumns, dragActiveId);
     if (activeColumn) {
       setOriginalColumnId(activeColumn.id);
-      setOriginalIndex(activeColumn.jobs.findIndex((job) => job.id === dragActiveId));
+      setOriginalIndex(findJobIndexInColumn(activeColumn, dragActiveId));
     }
   };
 
@@ -207,112 +206,86 @@ export function DashboardBoard({
     const { active, over } = event;
     if (!over) return;
 
-    const dragActiveId = Number(active.id);
+    const rawActiveId = active.id;
+    if (typeof rawActiveId === "string" && rawActiveId.startsWith("add-")) return;
+
+    const dragActiveId = typeof rawActiveId === "number" ? rawActiveId : Number(rawActiveId);
+    if (isNaN(dragActiveId)) return;
+
     const overId = over.id;
 
-    const activeColumn = findColumn(dragActiveId);
-    const overColumn = findColumn(overId);
-
-    if (!activeColumn || !overColumn) {
-      return;
-    }
-
-    // 같은 컬럼 내에서 순서 변경
-    if (activeColumn === overColumn) {
-      setLocalColumns((prev) => {
-        const currentColumns = prev || columns;
-        const columnJobs = [...activeColumn.jobs];
-
-        const activeIndex = columnJobs.findIndex((job) => job.id === dragActiveId);
-        const overIndex =
-          overColumn.id === overId
-            ? columnJobs.length - 1
-            : columnJobs.findIndex((job) => job.id === overId);
-
-        if (activeIndex === overIndex) return prev;
-
-        const newJobs = arrayMove(columnJobs, activeIndex, overIndex);
-
-        return currentColumns.map((col) => {
-          if (col.id === activeColumn.id) {
-            return { ...col, jobs: newJobs };
-          }
-          return col;
-        });
-      });
-      return;
-    }
-
-    // 다른 컬럼으로 이동
     setLocalColumns((prev) => {
       const currentColumns = prev || columns;
-      const activeJobs = [...activeColumn.jobs];
-      const overJobs = [...overColumn.jobs];
 
-      const activeIndex = activeJobs.findIndex((job) => job.id === dragActiveId);
-      const overIndex =
-        overColumn.id === overId ? overJobs.length : overJobs.findIndex((job) => job.id === overId);
+      const activeColumn = findColumnByIdOrJob(currentColumns, dragActiveId);
+      const overColumn = findColumnByIdOrJob(currentColumns, overId);
 
-      const [removedJob] = activeJobs.splice(activeIndex, 1);
-      overJobs.splice(overIndex, 0, removedJob);
+      if (!activeColumn || !overColumn) return prev;
 
-      return currentColumns.map((col) => {
-        if (col.id === activeColumn.id) {
-          return { ...col, jobs: activeJobs };
-        }
-        if (col.id === overColumn.id) {
-          return { ...col, jobs: overJobs };
-        }
-        return col;
-      });
+      if (activeColumn.id === overColumn.id) {
+        return reorderJobsInColumn(currentColumns, activeColumn.id, dragActiveId, overId);
+      }
+
+      return moveJobBetweenColumns(
+        currentColumns,
+        activeColumn.id,
+        overColumn.id,
+        dragActiveId,
+        overId
+      );
     });
   };
+
+  const resetDragState = useCallback(() => {
+    setActiveId(null);
+    setActiveJob(null);
+    setOriginalColumnId(null);
+    setOriginalIndex(null);
+  }, []);
+
+  const cancelDrag = useCallback(() => {
+    setLocalColumns(null);
+    resetDragState();
+  }, [resetDragState]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over) {
-      setLocalColumns(null);
-      setActiveId(null);
-      setOriginalColumnId(null);
-      setOriginalIndex(null);
+      cancelDrag();
       return;
     }
 
-    const dragActiveId = Number(active.id);
-    const overId = over.id;
+    const rawActiveId = active.id;
+    if (typeof rawActiveId === "string" && rawActiveId.startsWith("add-")) {
+      cancelDrag();
+      return;
+    }
+
+    const dragActiveId = typeof rawActiveId === "number" ? rawActiveId : Number(rawActiveId);
+    if (isNaN(dragActiveId)) {
+      cancelDrag();
+      return;
+    }
 
     const currentColumns = localColumns || columns;
-
-    const findColumnInCurrent = (id: number | string) => {
-      if (currentColumns.some((col) => col.id === id)) {
-        return currentColumns.find((col) => col.id === id);
-      }
-      return currentColumns.find((col) => col.jobs.some((job) => job.id === id));
-    };
-
-    const overColumn = findColumnInCurrent(overId);
+    const overColumn = findColumnByIdOrJob(currentColumns, over.id);
 
     if (!overColumn) {
-      setLocalColumns(null);
-      setActiveId(null);
-      setOriginalColumnId(null);
-      setOriginalIndex(null);
+      cancelDrag();
       return;
     }
 
-    const currentCardIndex = overColumn.jobs.findIndex((job) => job.id === dragActiveId);
-    const isSamePosition = originalColumnId === overColumn.id && originalIndex === currentCardIndex;
+    const currentCardIndex = findJobIndexInColumn(overColumn, dragActiveId);
 
-    if (isSamePosition || currentCardIndex === -1) {
-      setLocalColumns(null);
-      setActiveId(null);
-      setOriginalColumnId(null);
-      setOriginalIndex(null);
+    if (
+      currentCardIndex === -1 ||
+      isSameDropPosition(originalColumnId, overColumn.id, originalIndex, currentCardIndex)
+    ) {
+      cancelDrag();
       return;
     }
 
-    // 부모 컴포넌트에 드래그 완료 알림
     onDragEnd(
       dragActiveId,
       overColumn.id,
@@ -322,12 +295,7 @@ export function DashboardBoard({
       currentColumns
     );
 
-    console.log("드롭되었습니다");
-
-    setLocalColumns(null);
-    setActiveId(null);
-    setOriginalColumnId(null);
-    setOriginalIndex(null);
+    resetDragState();
   };
 
   const handleCardClick = (job: Job, columnId: string) => {
@@ -343,10 +311,6 @@ export function DashboardBoard({
     setSelectedColumnId(columnId);
     setIsModalOpen(true);
   };
-
-  const activeJob = activeId
-    ? displayColumns.flatMap((col) => col.jobs).find((job) => job.id === activeId)
-    : null;
 
   return (
     <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
