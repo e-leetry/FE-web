@@ -242,3 +242,7 @@ useEffect(() => {
 5. className 은 cn(BASE, variant.className, props.className) 형태로 병합한다.
 6. 타입 안정성을 위해 VARIANTS 는 as const 로 선언한다.
 7. 컴포넌트 외부 인터페이스는 유지한다._
+
+
+## 함수
+- 토스트 노출: showToast

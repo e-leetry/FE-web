@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
 import { FloatingInputButton } from "@/components/features/dashboard/floating-input-button";
 import { LocalJob } from "@/lib/hooks/use-local-dashboard";
 import type { SseStreamingData } from "@/lib/hooks/use-job-summarize-sse";
+import { showToast } from "@/store/ui/toast-store";
 import {
   closestCorners,
   DndContext,
@@ -112,7 +114,9 @@ function KanbanColumn({
           ))}
           <JobCard
             type="add"
-            onClick={() => handleCardClick({ id: -Date.now(), companyName: "" }, column.id)}
+            onClick={() =>
+              handleCardClick({ id: -Date.now(), companyName: "", type: "add" }, column.id)
+            }
           />
         </div>
       </SortableContext>
@@ -142,6 +146,7 @@ export function DashboardBoard({
   onDeleteLocal,
   onSaveButtonClick
 }: DashboardBoardProps) {
+  const router = useRouter();
   const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
   const [prevColumns, setPrevColumns] = useState<Column[]>(columns);
 
@@ -313,6 +318,14 @@ export function DashboardBoard({
   };
 
   const handleCardClick = (job: Job, columnId: string) => {
+    if (job.type === "add" && !isLoggedIn) {
+      showToast({
+        variant: "error",
+        leftElement: "로그인한 사용자만 공고를 추가할 수 있어요"
+      });
+      router.push("/login");
+      return;
+    }
     setSelectedJob(job);
     setSelectedColumnId(columnId);
     setIsModalOpen(true);

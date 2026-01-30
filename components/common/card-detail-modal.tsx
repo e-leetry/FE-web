@@ -319,13 +319,13 @@ export const CardDetailModal = ({
 
     const dataToUse = isLoggedIn ? jobPostingData || initialData : initialData;
 
-    if (isEdit && dataToUse) {
+    if (dataToUse) {
       // 비로그인 사용자의 로컬스토리지 데이터 형식 처리
       if (!isLoggedIn) {
         form.reset({
           companyName: dataToUse.companyName || "",
           jobTitle: dataToUse.title || "",
-          jobUrl: "",
+          jobUrl: dataToUse.url || "",
           process: dataToUse.hireProcess || "",
           deadline: dataToUse.deadline || "",
           mainTasks: dataToUse.mainTasks || "",
@@ -358,7 +358,7 @@ export const CardDetailModal = ({
           memo: dataToUse.memo || ""
         });
       }
-    } else if (!isEdit) {
+    } else {
       form.reset({
         companyName: "",
         jobTitle: "",
@@ -373,7 +373,7 @@ export const CardDetailModal = ({
     }
 
     return () => clearTimeout(timer);
-  }, [isOpen, sseData, isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, sseData, isLoggedIn, jobPostingData, initialData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // SSE 모드에서는 기존 초기화 로직 건너뛰기
@@ -381,13 +381,13 @@ export const CardDetailModal = ({
 
     const dataToUse = isLoggedIn ? jobPostingData || initialData : initialData;
 
-    if (isOpen && isEdit && dataToUse) {
+    if (isOpen && dataToUse) {
       // 비로그인 사용자의 로컬스토리지 데이터 형식 처리
       if (!isLoggedIn) {
         form.reset({
           companyName: dataToUse.companyName || "",
           jobTitle: dataToUse.title || "",
-          jobUrl: "",
+          jobUrl: dataToUse.url || "",
           process: dataToUse.hireProcess || "",
           deadline: dataToUse.deadline || "",
           mainTasks: dataToUse.mainTasks || "",
@@ -421,7 +421,7 @@ export const CardDetailModal = ({
         });
       }
     }
-  }, [jobPostingData, initialData, sseData, isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [jobPostingData, initialData, sseData, isLoggedIn, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // SSE 메타데이터로 폼 초기화
   useEffect(() => {
@@ -492,6 +492,7 @@ export const CardDetailModal = ({
           companyName: values.companyName,
           title: values.jobTitle,
           deadline: values.deadline,
+          url: values.jobUrl,
           hireProcess: values.process,
           mainTasks: values.mainTasks,
           requirements: values.qualifications,
@@ -576,6 +577,7 @@ export const CardDetailModal = ({
       companyName: values.companyName,
       title: values.jobTitle,
       deadline: values.deadline,
+      url: values.jobUrl,
       hireProcess: values.process,
       mainTasks: values.mainTasks,
       requirements: values.qualifications,

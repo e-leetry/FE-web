@@ -11,13 +11,13 @@ import { cn } from "@/lib/utils";
 const HEADER_STYLES = {
   base: "flex h-[64px] w-full items-center justify-between px-[40px] py-[23px] z-50 transition-colors",
   transparent: "absolute top-0 bg-transparent border-transparent",
-  solid: "bg-white border-b border-[#EEEEEE]",
+  solid: "bg-white border-b border-[#EEEEEE]"
 } as const;
 
 const NAV_LINK_STYLES = {
   base: "text-[13px] font-semibold tracking-[-0.02em] transition-colors",
   dark: "text-white/80 hover:text-white",
-  light: "text-[#343E4C]/80 hover:text-[#343E4C]",
+  light: "text-[#343E4C]/80 hover:text-[#343E4C]"
 } as const;
 
 interface HeaderProps {
@@ -45,11 +45,7 @@ function LoginLink({ isDark, className }: NavActionProps) {
   );
 }
 
-function LogoutButton({
-  isDark,
-  className,
-  onLogout,
-}: NavActionProps & { onLogout: () => void }) {
+function LogoutButton({ isDark, className, onLogout }: NavActionProps & { onLogout: () => void }) {
   return (
     <button
       type="button"
@@ -87,7 +83,7 @@ export function Header({ transparent, isDark }: HeaderProps) {
       )}
     >
       <Link
-        href="/dashboard"
+        href="/"
         aria-label="대시보드로 이동"
         className="flex items-center gap-[9px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent transition-colors"
       >
