@@ -86,7 +86,11 @@ export function Header({ transparent, isDark }: HeaderProps) {
         transparent ? HEADER_STYLES.transparent : HEADER_STYLES.solid
       )}
     >
-      <div className="flex items-center gap-[9px]">
+      <Link
+        href="/dashboard"
+        aria-label="대시보드로 이동"
+        className="flex items-center gap-[9px] rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent transition-colors"
+      >
         <Image
           src="/images/logo/logo-kr.png"
           alt="Reet Logo"
@@ -94,7 +98,7 @@ export function Header({ transparent, isDark }: HeaderProps) {
           height={28}
           className={cn("h-[28px] w-[75px]", isDark && "brightness-0 invert")}
         />
-      </div>
+      </Link>
       {isLoggedIn ? (
         <LogoutButton isDark={isDark} onLogout={handleLogout} />
       ) : (

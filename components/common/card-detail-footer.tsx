@@ -18,9 +18,13 @@ export interface CardDetailFooterProps {
   onDelete?: () => void;
   isDeletePending?: boolean;
   deleteLabel?: string;
+  onSave?: () => void;
 }
 
-const STATUS_CONTENT: Record<Exclude<CardDetailFooterStatus, "default">, { icon: string; text: string; alt: string }> = {
+const STATUS_CONTENT: Record<
+  Exclude<CardDetailFooterStatus, "default">,
+  { icon: string; text: string; alt: string }
+> = {
   loading: {
     icon: "/images/icon/ico_ai.svg",
     text: "공고 불러오는 중",
@@ -44,7 +48,8 @@ export function CardDetailFooter({
   showDelete = false,
   onDelete,
   isDeletePending = false,
-  deleteLabel
+  deleteLabel,
+  onSave
 }: CardDetailFooterProps) {
   const resolvedStatus: CardDetailFooterStatus =
     status ?? (isFetching || isSseStreaming ? "loading" : "default");
@@ -59,6 +64,10 @@ export function CardDetailFooter({
 
   const isCloseDisabled = isPending && !isFetching;
   const isSubmitDisabled = isPending;
+
+  const saveButtonProps = onSave
+    ? { type: "button" as const, onClick: onSave }
+    : { type: "submit" as const, form: formId };
 
   return (
     <div className={footerLayoutClass}>
@@ -82,7 +91,7 @@ export function CardDetailFooter({
               className="h-auto px-0 py-0 text-[18px] font-medium text-[#5C5C5C] hover:bg-transparent hover:text-[#282828] sm:flex-none"
             >
               <Image src="/images/icon/ico_delete.svg" alt="삭제하기" width={24} height={24} />
-              <span>{isDeletePending ? "삭제 중..." : deleteLabel ?? "삭제하기"}</span>
+              <span>{isDeletePending ? "삭제 중..." : (deleteLabel ?? "삭제하기")}</span>
             </Button>
           ) : null}
         </div>
@@ -100,11 +109,10 @@ export function CardDetailFooter({
           닫기
         </Button>
         <Button
-          type="submit"
+          {...saveButtonProps}
           color="primary"
           size="xl"
           disabled={isSubmitDisabled}
-          form={formId}
           className="flex-1 sm:flex-none"
         >
           {isPending

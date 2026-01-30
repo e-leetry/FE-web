@@ -17,7 +17,7 @@ export function JobFetchInput({
   onChange,
   onFetch,
   placeholder = "원티드, 잡코리아 등 채용공고 주소를 입력해요",
-  className,
+  className
 }: JobFetchInputProps) {
   return (
     <div
@@ -37,12 +37,7 @@ export function JobFetchInput({
         onClick={onFetch}
         className="flex items-center justify-center h-11 px-2.5 gap-1 rounded-[12px] border-[1.5px] border-[#eee] bg-white transition-colors hover:bg-slate-50 active:bg-slate-100 shrink-0"
       >
-        <Image
-          src="/images/icon/ico_fetch.svg"
-          alt="fetch"
-          width={23}
-          height={23}
-        />
+        <Image src="/images/icon/ico_ai.svg" alt="fetch" width={23} height={23} />
         <span className="text-sm font-medium text-[#5c646f] tracking-[-0.28px] font-['Pretendard']">
           공고 불러오기
         </span>

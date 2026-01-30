@@ -3,14 +3,15 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/useAuth";
-import { useLocalDashboard, LocalJob } from "@/lib/hooks/use-local-dashboard";
+import {
+  useLocalDashboard,
+  LocalJob,
+  INITIAL_LOCAL_COLUMNS
+} from "@/lib/hooks/use-local-dashboard";
 import { useDashboardCommon } from "@/lib/hooks/use-dashboard-common";
 import { useJobSummarizeContext } from "@/lib/context/job-summarize-context";
-import {
-  DashboardBoard,
-  Column,
-  INITIAL_COLUMNS
-} from "@/components/features/dashboard/dashboard-board";
+import { DashboardBoard, Column } from "@/components/features/dashboard/dashboard-board";
+import { showToast } from "@/store/ui/toast-store";
 
 export default function GuestDashboardPage() {
   const router = useRouter();
@@ -37,14 +38,14 @@ export default function GuestDashboardPage() {
   } = useLocalDashboard();
 
   // 잡 카드가 하나도 없으면 온보딩으로 이동
-  useEffect(() => {
-    if (isLocalLoaded) {
-      const totalJobs = localStorageColumns.reduce((acc, col) => acc + col.jobs.length, 0);
-      if (totalJobs === 0) {
-        router.replace("/onboarding");
-      }
-    }
-  }, [isLocalLoaded, localStorageColumns, router]);
+  // useEffect(() => {
+  //   if (isLocalLoaded) {
+  //     const totalJobs = localStorageColumns.reduce((acc, col) => acc + col.jobs.length, 0);
+  //     if (totalJobs === 0) {
+  //       router.replace("/onboarding");
+  //     }
+  //   }
+  // }, [isLocalLoaded, localStorageColumns, router]);
 
   // 컬럼 데이터 (로컬스토리지)
   const columns = useMemo<Column[]>(() => {
@@ -62,7 +63,7 @@ export default function GuestDashboardPage() {
         }))
       }));
     }
-    return INITIAL_COLUMNS;
+    return INITIAL_LOCAL_COLUMNS.map((col) => ({ ...col, jobs: [...col.jobs] }));
   }, [isLocalLoaded, localStorageColumns]);
 
   // SSE 메타데이터 도착 시 로컬스토리지에 추가
@@ -110,8 +111,6 @@ export default function GuestDashboardPage() {
     isInputOpen,
     setIsInputOpen,
     isInputLoading,
-    showErrorToast,
-    setShowErrorToast,
     isModalOpen,
     setIsModalOpen,
     selectedJob,
@@ -165,6 +164,15 @@ export default function GuestDashboardPage() {
     return findLocalJob(selectedJob.id);
   }, [selectedJob, findLocalJob]);
 
+  const onButtonClick = () => {
+    showToast({
+      variant: "error",
+      leftElement: "로그인한 사용자만 공고를 추가할 수 있어요"
+    });
+    router.push("/login");
+    return false;
+  };
+
   if (isLoggedIn) {
     return null;
   }
@@ -176,8 +184,6 @@ export default function GuestDashboardPage() {
       isInputOpen={isInputOpen}
       setIsInputOpen={setIsInputOpen}
       isInputLoading={isInputLoading}
-      showErrorToast={showErrorToast}
-      setShowErrorToast={setShowErrorToast}
       onSseSubmit={handleSseSubmit}
       isModalOpen={isModalOpen}
       setIsModalOpen={setIsModalOpen}
@@ -192,6 +198,7 @@ export default function GuestDashboardPage() {
       onCloseModal={handleCloseModal}
       onSaveToLocal={handleSaveToLocal}
       onDeleteLocal={handleDeleteLocal}
+      onSaveButtonClick={onButtonClick}
     />
   );
 }

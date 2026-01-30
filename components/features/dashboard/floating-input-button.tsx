@@ -14,7 +14,7 @@ interface FloatingInputButtonProps {
   /** 제출 핸들러 */
   onSubmit?: (value: string) => void;
   /** 버튼 클릭 핸들러 (인풋 모드 전환 전) */
-  onButtonClick?: () => void;
+  onButtonClick?: () => boolean | void;
   /** 외부에서 열림 상태 제어 */
   isOpen?: boolean;
   /** 열림 상태 변경 핸들러 */
@@ -52,8 +52,10 @@ export function FloatingInputButton({
   };
 
   const handleButtonClick = () => {
-    onButtonClick?.();
-    setIsOpen(true);
+    const isOpen = onButtonClick?.();
+    if (isOpen) {
+      setIsOpen(true);
+    }
   };
 
   const handleSubmit = () => {
@@ -100,7 +102,7 @@ export function FloatingInputButton({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, inputValue]);
+  }, [isOpen, inputValue, setIsOpen]);
 
   return (
     <div

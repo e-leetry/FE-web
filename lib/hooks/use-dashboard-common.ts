@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import type { Route } from "next";
 import { useJobSummarizeContext } from "@/lib/context/job-summarize-context";
 import type { Job, Column } from "@/components/features/dashboard/dashboard-board";
+import { showToast } from "@/store/ui/toast-store";
 
 interface UseDashboardCommonOptions<T extends string = string> {
   /** 현재 페이지 경로 (URL 정리 시 사용) */
@@ -12,7 +13,11 @@ interface UseDashboardCommonOptions<T extends string = string> {
   /** 컬럼 데이터 */
   columns: Column[];
   /** SSE 메타데이터 도착 시 추가 처리 (비회원: 로컬스토리지에 추가) */
-  onSseMetadata?: (jobId: number, metadata: NonNullable<ReturnType<typeof useJobSummarizeContext>["streamingData"]["metadata"]>, firstColumnId: string) => void;
+  onSseMetadata?: (
+    jobId: number,
+    metadata: NonNullable<ReturnType<typeof useJobSummarizeContext>["streamingData"]["metadata"]>,
+    firstColumnId: string
+  ) => void;
   /** SSE 완료 시 처리 */
   onSseComplete: (jobId: number) => void;
 }
@@ -30,7 +35,6 @@ export function useDashboardCommon({
   // 공통 상태
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [isInputLoading, setIsInputLoading] = useState(false);
-  const [showErrorToast, setShowErrorToast] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [selectedColumnId, setSelectedColumnId] = useState<string | undefined>(undefined);
@@ -115,7 +119,11 @@ export function useDashboardCommon({
     if (streamingData.error) {
       startTransition(() => {
         setIsInputLoading(false);
-        setShowErrorToast(true);
+      });
+      showToast({
+        variant: "error",
+        leftElement: "공고를 요약하지 못했어요",
+        rightElement: "기능을 계속 넓히고 있어요"
       });
       console.error("SSE Error:", streamingData.error);
     }
@@ -144,8 +152,6 @@ export function useDashboardCommon({
     isInputOpen,
     setIsInputOpen,
     isInputLoading,
-    showErrorToast,
-    setShowErrorToast,
     isModalOpen,
     setIsModalOpen,
     selectedJob,

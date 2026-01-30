@@ -4,6 +4,10 @@ import { useState, useCallback, useEffect, startTransition } from "react";
 
 const LOCAL_STORAGE_KEY = "reet_dashboard_data";
 
+interface StoredJob extends LocalJob {
+  columnId: string;
+}
+
 export interface LocalJob {
   id: number;
   companyName: string;
@@ -25,7 +29,7 @@ export interface LocalColumn {
   jobs: LocalJob[];
 }
 
-const INITIAL_LOCAL_COLUMNS: LocalColumn[] = [
+export const INITIAL_LOCAL_COLUMNS: LocalColumn[] = [
   { id: "interest", title: "관심공고", jobs: [] },
   { id: "applied", title: "서류제출", jobs: [] },
   { id: "interview1", title: "1차면접", jobs: [] },
@@ -33,9 +37,56 @@ const INITIAL_LOCAL_COLUMNS: LocalColumn[] = [
   { id: "final", title: "최종합격", jobs: [] }
 ];
 
+const buildColumnsWithSingle = (storedJob: StoredJob | null): LocalColumn[] =>
+  INITIAL_LOCAL_COLUMNS.map((col) => ({
+    ...col,
+    jobs:
+      storedJob && storedJob.columnId === col.id
+        ? [
+            {
+              id: storedJob.id,
+              companyName: storedJob.companyName,
+              title: storedJob.title,
+              deadline: storedJob.deadline,
+              url: storedJob.url,
+              type: storedJob.type,
+              hireProcess: storedJob.hireProcess,
+              mainTasks: storedJob.mainTasks,
+              requirements: storedJob.requirements,
+              preferred: storedJob.preferred
+            }
+          ]
+        : []
+  }));
+
+const extractStoredJob = (data: LocalColumn[]): StoredJob | null => {
+  for (const col of data) {
+    const job = col.jobs[0];
+    if (job) {
+      return { ...job, columnId: col.id } as StoredJob;
+    }
+  }
+  return null;
+};
+
 export function useLocalDashboard() {
-  const [columns, setColumns] = useState<LocalColumn[]>(INITIAL_LOCAL_COLUMNS);
+  const [columns, setColumns] = useState<LocalColumn[]>(() => buildColumnsWithSingle(null));
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // 로컬스토리지에 저장
+  const saveToStorage = useCallback((job: StoredJob | null) => {
+    if (typeof window === "undefined") return;
+
+    try {
+      if (!job) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        return;
+      }
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(job));
+    } catch (error) {
+      console.error("Failed to save dashboard to localStorage:", error);
+    }
+  }, []);
 
   // 로컬스토리지에서 데이터 로드
   useEffect(() => {
@@ -44,10 +95,24 @@ export function useLocalDashboard() {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored) as LocalColumn[];
-        startTransition(() => {
-          setColumns(parsed);
-        });
+        const parsed = JSON.parse(stored);
+        let storedJob: StoredJob | null = null;
+
+        if (parsed && typeof parsed === "object" && "columnId" in parsed) {
+          storedJob = parsed as StoredJob;
+        } else if (Array.isArray(parsed) && parsed[0] && typeof parsed[0] === "object") {
+          const first = parsed[0];
+          if (first && "columnId" in first) {
+            storedJob = first as StoredJob;
+          }
+        }
+
+        if (storedJob) {
+          const nextColumns = buildColumnsWithSingle(storedJob);
+          startTransition(() => {
+            setColumns(nextColumns);
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to load dashboard from localStorage:", error);
@@ -57,32 +122,14 @@ export function useLocalDashboard() {
     });
   }, []);
 
-  // 로컬스토리지에 저장
-  const saveToStorage = useCallback((data: LocalColumn[]) => {
-    if (typeof window === "undefined") return;
-
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-    } catch (error) {
-      console.error("Failed to save dashboard to localStorage:", error);
-    }
-  }, []);
-
   // Job 추가 (로딩 상태로)
   const addLoadingJob = useCallback(
     (job: Omit<LocalJob, "type">, columnId: string = "interest") => {
-      setColumns((prev) => {
-        const newColumns = prev.map((col) => {
-          if (col.id === columnId) {
-            return {
-              ...col,
-              jobs: [...col.jobs, { ...job, type: "loading" as const }]
-            };
-          }
-          return col;
-        });
-        saveToStorage(newColumns);
-        return newColumns;
+      setColumns(() => {
+        const storedJob: StoredJob = { ...job, columnId, type: "loading" };
+        const nextColumns = buildColumnsWithSingle(storedJob);
+        saveToStorage(storedJob);
+        return nextColumns;
       });
     },
     [saveToStorage]
@@ -92,14 +139,20 @@ export function useLocalDashboard() {
   const updateJob = useCallback(
     (jobId: number, updates: Partial<LocalJob>) => {
       setColumns((prev) => {
-        const newColumns = prev.map((col) => ({
-          ...col,
-          jobs: col.jobs.map((job) =>
-            job.id === jobId ? { ...job, ...updates, type: "default" as const } : job
-          )
-        }));
-        saveToStorage(newColumns);
-        return newColumns;
+        const current = extractStoredJob(prev);
+        if (!current || current.id !== jobId) return prev;
+
+        const updated: StoredJob = {
+          ...current,
+          ...updates,
+          type: "default" as const,
+          columnId: current.columnId
+        };
+
+        const nextColumns = buildColumnsWithSingle(updated);
+        saveToStorage(updated);
+        console.log("updated", updated);
+        return nextColumns;
       });
     },
     [saveToStorage]
@@ -109,12 +162,12 @@ export function useLocalDashboard() {
   const removeJob = useCallback(
     (jobId: number) => {
       setColumns((prev) => {
-        const newColumns = prev.map((col) => ({
-          ...col,
-          jobs: col.jobs.filter((job) => job.id !== jobId)
-        }));
-        saveToStorage(newColumns);
-        return newColumns;
+        const current = extractStoredJob(prev);
+        if (!current || current.id !== jobId) return prev;
+
+        const nextColumns = buildColumnsWithSingle(null);
+        saveToStorage(null);
+        return nextColumns;
       });
     },
     [saveToStorage]
@@ -122,41 +175,15 @@ export function useLocalDashboard() {
 
   // Job 이동 (컬럼 간)
   const moveJob = useCallback(
-    (jobId: number, toColumnId: string, toIndex?: number) => {
+    (jobId: number, toColumnId: string, _toIndex?: number) => {
       setColumns((prev) => {
-        let movedJob: LocalJob | null = null;
+        const current = extractStoredJob(prev);
+        if (!current || current.id !== jobId) return prev;
 
-        // 기존 위치에서 제거
-        const withoutJob = prev.map((col) => {
-          const jobIndex = col.jobs.findIndex((j) => j.id === jobId);
-          if (jobIndex !== -1) {
-            movedJob = col.jobs[jobIndex];
-            return {
-              ...col,
-              jobs: col.jobs.filter((j) => j.id !== jobId)
-            };
-          }
-          return col;
-        });
-
-        if (!movedJob) return prev;
-
-        // 새 위치에 추가
-        const newColumns = withoutJob.map((col) => {
-          if (col.id === toColumnId) {
-            const jobs = [...col.jobs];
-            if (toIndex !== undefined) {
-              jobs.splice(toIndex, 0, movedJob!);
-            } else {
-              jobs.push(movedJob!);
-            }
-            return { ...col, jobs };
-          }
-          return col;
-        });
-
-        saveToStorage(newColumns);
-        return newColumns;
+        const moved: StoredJob = { ...current, columnId: toColumnId };
+        const nextColumns = buildColumnsWithSingle(moved);
+        saveToStorage(moved);
+        return nextColumns;
       });
     },
     [saveToStorage]
@@ -164,19 +191,14 @@ export function useLocalDashboard() {
 
   // 컬럼 내 순서 변경
   const reorderJobs = useCallback(
-    (columnId: string, fromIndex: number, toIndex: number) => {
+    (_columnId: string, _fromIndex: number, _toIndex: number) => {
       setColumns((prev) => {
-        const newColumns = prev.map((col) => {
-          if (col.id === columnId) {
-            const jobs = [...col.jobs];
-            const [removed] = jobs.splice(fromIndex, 1);
-            jobs.splice(toIndex, 0, removed);
-            return { ...col, jobs };
-          }
-          return col;
-        });
-        saveToStorage(newColumns);
-        return newColumns;
+        const current = extractStoredJob(prev);
+        if (!current) return prev;
+
+        const nextColumns = buildColumnsWithSingle(current);
+        saveToStorage(current);
+        return nextColumns;
       });
     },
     [saveToStorage]
@@ -196,7 +218,7 @@ export function useLocalDashboard() {
 
   // 전체 초기화
   const clearAll = useCallback(() => {
-    setColumns(INITIAL_LOCAL_COLUMNS);
+    setColumns(buildColumnsWithSingle(null));
     if (typeof window !== "undefined") {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
     }

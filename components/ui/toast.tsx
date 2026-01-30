@@ -10,7 +10,7 @@ const TOAST_DURATION = 3000; // 3초
 const ANIMATION_DURATION = 300; // 0.3초
 
 const toastVariants = cva(
-  "inline-flex items-center gap-8 rounded-full px-5 py-4 h-14 bg-[rgba(40,40,40,0.72)] backdrop-blur-[8px] shadow-[0px_2px_8px_0px_rgba(0,0,0,0.05)]",
+  "flex items-center justify-between gap-6 rounded-full px-5 py-4 min-h-14 min-w-[360px] max-w-[520px] bg-[rgba(40,40,40,0.72)] backdrop-blur-[8px] shadow-[0px_2px_8px_0px_rgba(0,0,0,0.05)]",
   {
     variants: {
       variant: {
@@ -89,7 +89,8 @@ const DefaultIcon = ({ variant }: { variant: "success" | "error" }) => {
 };
 
 export interface ToastProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "children">,
+  extends
+    Omit<React.HTMLAttributes<HTMLDivElement>, "children">,
     VariantProps<typeof toastVariants> {
   /** 토스트 표시 여부 */
   visible: boolean;
@@ -102,7 +103,10 @@ export interface ToastProps
 }
 
 const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
-  ({ className, variant = "success", visible, onClose, leftElement, rightElement, ...props }, ref) => {
+  (
+    { className, variant = "success", visible, onClose, leftElement, rightElement, ...props },
+    ref
+  ) => {
     const [isExiting, setIsExiting] = useState(false);
 
     useEffect(() => {
@@ -142,7 +146,7 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
             <span className={toastIconVariants({ variant })}>
               <DefaultIcon variant={variant ?? "success"} />
             </span>
-            <span className="text-white text-base font-bold leading-tight tracking-tight">
+            <span className="text-white text-base font-bold leading-tight tracking-tight whitespace-nowrap">
               {leftElement}
             </span>
           </div>
@@ -155,14 +159,14 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
 
     return (
       <div
-        className={`fixed top-10 left-1/2 z-50 ${
+        className={`fixed top-10 left-1/2 z-[9999] ${
           isExiting ? "animate-toast-slide-out" : "animate-toast-slide-in"
         }`}
       >
         <div ref={ref} className={cn(toastVariants({ variant }), className)} {...props}>
           {leftElement && renderLeftElement()}
           {rightElement && (
-            <div className="flex items-center gap-1 text-[#EEEEEE] text-sm font-medium leading-tight tracking-tight">
+            <div className="flex items-center gap-1 text-[#EEEEEE] text-sm font-medium leading-tight tracking-tight whitespace-nowrap">
               {rightElement}
             </div>
           )}

@@ -5,7 +5,6 @@ import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
 import { FloatingInputButton } from "@/components/features/dashboard/floating-input-button";
-import { Toast } from "@/components/ui/toast";
 import { LocalJob } from "@/lib/hooks/use-local-dashboard";
 import type { SseStreamingData } from "@/lib/hooks/use-job-summarize-sse";
 import {
@@ -43,22 +42,12 @@ export interface Column {
   jobs: Job[];
 }
 
-export const INITIAL_COLUMNS: Column[] = [
-  { id: "interest", title: "관심공고", jobs: [] },
-  { id: "applied", title: "서류제출", jobs: [] },
-  { id: "interview1", title: "1차면접", jobs: [] },
-  { id: "interview2", title: "2차면접", jobs: [] },
-  { id: "final", title: "최종합격", jobs: [] }
-];
-
 interface DashboardBoardProps {
   columns: Column[];
   mounted: boolean;
   isInputOpen: boolean;
   setIsInputOpen: (open: boolean) => void;
   isInputLoading: boolean;
-  showErrorToast: boolean;
-  setShowErrorToast: (show: boolean) => void;
   onSseSubmit: (url: string) => void;
   // 모달 관련
   isModalOpen: boolean;
@@ -86,6 +75,7 @@ interface DashboardBoardProps {
   onCloseModal: () => void;
   onSaveToLocal?: (jobData: LocalJob) => void;
   onDeleteLocal?: (jobId: number) => void;
+  onSaveButtonClick?: () => void | boolean;
 }
 
 function KanbanColumn({
@@ -136,8 +126,6 @@ export function DashboardBoard({
   isInputOpen,
   setIsInputOpen,
   isInputLoading,
-  showErrorToast,
-  setShowErrorToast,
   onSseSubmit,
   isModalOpen,
   setIsModalOpen,
@@ -151,7 +139,8 @@ export function DashboardBoard({
   onDragEnd,
   onCloseModal,
   onSaveToLocal,
-  onDeleteLocal
+  onDeleteLocal,
+  onSaveButtonClick
 }: DashboardBoardProps) {
   const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
   const [prevColumns, setPrevColumns] = useState<Column[]>(columns);
@@ -315,6 +304,8 @@ export function DashboardBoard({
       currentColumns
     );
 
+    console.log("드롭되었습니다");
+
     setLocalColumns(null);
     setActiveId(null);
     setOriginalColumnId(null);
@@ -330,61 +321,6 @@ export function DashboardBoard({
   const activeJob = activeId
     ? displayColumns.flatMap((col) => col.jobs).find((job) => job.id === activeId)
     : null;
-
-  // 마운트 전 정적 UI
-  if (!mounted) {
-    return (
-      <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
-        <div className="flex min-w-fit flex-1 gap-[20px] px-[80px] py-8 min-[1920px]:gap-[32px] min-[1920px]:px-[240px]">
-          {displayColumns.flatMap((column, index) => [
-            <div key={column.id} className="flex min-w-[180px] flex-1 flex-col gap-[16px]">
-              <StatusHeader title={column.title} count={column.jobs.length} />
-              <div className="flex min-h-[200px] flex-1 flex-col gap-[16px]">
-                {column.jobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    id={job.id}
-                    type={job.type || "default"}
-                    companyName={job.companyName}
-                    title={job.title}
-                    deadline={job.deadline}
-                    url={job.url}
-                    onClick={() => handleCardClick(job, column.id)}
-                  />
-                ))}
-                <JobCard
-                  type="add"
-                  onClick={() => handleCardClick({ id: -Date.now(), companyName: "" }, column.id)}
-                />
-              </div>
-            </div>,
-            ...(index < displayColumns.length - 1
-              ? [
-                  <div
-                    key={`sep-${index}`}
-                    className="w-[1px] flex-shrink-0 self-stretch bg-[#E9E9E9]"
-                  />
-                ]
-              : [])
-          ])}
-        </div>
-        <FloatingInputButton
-          isOpen={isInputOpen}
-          onOpenChange={setIsInputOpen}
-          isLoading={isInputLoading}
-          onSubmit={onSseSubmit}
-        />
-
-        <Toast
-          visible={showErrorToast}
-          onClose={() => setShowErrorToast(false)}
-          variant="error"
-          leftElement="공고를 요약하지 못했어요"
-          rightElement="기능을 계속 넓히고 있어요"
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
@@ -440,14 +376,7 @@ export function DashboardBoard({
         onOpenChange={setIsInputOpen}
         isLoading={isInputLoading}
         onSubmit={onSseSubmit}
-      />
-
-      <Toast
-        visible={showErrorToast}
-        onClose={() => setShowErrorToast(false)}
-        variant="error"
-        leftElement="공고를 요약하지 못했어요"
-        rightElement="기능을 계속 넓히고 있어요"
+        onButtonClick={onSaveButtonClick}
       />
     </div>
   );

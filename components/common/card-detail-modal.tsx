@@ -300,6 +300,8 @@ export const CardDetailModal = ({
 
   const companyName = useWatch({ control: form.control, name: "companyName" });
 
+  const effectiveJobId = jobPostingId ?? initialData?.id ?? sseData?.metadata?.jobId;
+
   const handleSummarize = () => {
     if (!jobPostingId) return;
     summarize();
@@ -482,9 +484,11 @@ export const CardDetailModal = ({
 
     // 비로그인 사용자: 로컬스토리지에 저장
     if (!isLoggedIn) {
-      if (onSaveToLocal && jobPostingId) {
+      const targetJobId = effectiveJobId;
+
+      if (onSaveToLocal && targetJobId !== undefined) {
         onSaveToLocal({
-          id: jobPostingId,
+          id: targetJobId,
           companyName: values.companyName,
           title: values.jobTitle,
           deadline: values.deadline,
@@ -560,19 +564,41 @@ export const CardDetailModal = ({
     onClose();
   };
 
+  const handleSaveLocal = () => {
+    if (isLoggedIn) return;
+    const targetJobId = effectiveJobId;
+    if (!onSaveToLocal || targetJobId === undefined) return;
+
+    const values = form.getValues();
+
+    onSaveToLocal({
+      id: targetJobId,
+      companyName: values.companyName,
+      title: values.jobTitle,
+      deadline: values.deadline,
+      hireProcess: values.process,
+      mainTasks: values.mainTasks,
+      requirements: values.qualifications,
+      preferred: values.preferences
+    });
+
+    handleClose();
+  };
+
   const handleDelete = () => {
-    if (!jobPostingId) return;
+    const targetJobId = effectiveJobId;
+    if (targetJobId === undefined) return;
 
     if (!isLoggedIn) {
       if (onDeleteLocal) {
-        onDeleteLocal(jobPostingId);
+        onDeleteLocal(targetJobId);
       }
       handleClose();
       return;
     }
 
     deleteSummary(
-      { id: jobPostingId },
+      { id: targetJobId },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
@@ -608,13 +634,14 @@ export const CardDetailModal = ({
     status: footerStatus,
     showDelete: isEdit,
     onDelete: handleDelete,
-    isDeletePending: isDeleting
+    isDeletePending: isDeleting,
+    onSave: !isLoggedIn ? handleSaveLocal : undefined
   };
 
   const defaultFooter = <CardDetailFooter {...footerProps} />;
 
   const resolvedFooter =
-    typeof footer === "function" ? footer(footerProps) : footer ?? defaultFooter;
+    typeof footer === "function" ? footer(footerProps) : (footer ?? defaultFooter);
 
   return (
     <BaseModal
@@ -666,16 +693,10 @@ export const CardDetailModal = ({
           </div>
         </>
       }
-      footer={
-        resolvedFooter
-      }
+      footer={resolvedFooter}
     >
       <Form {...form}>
-        <form
-          id={FORM_ID}
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col"
-        >
+        <form id={FORM_ID} onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
           {activeTab === "info" ? (
             <RecruitmentInfoForm
               control={form.control}

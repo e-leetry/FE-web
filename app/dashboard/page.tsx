@@ -10,14 +10,9 @@ import {
 import { useMove } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDashboardCommon } from "@/lib/hooks/use-dashboard-common";
-import {
-  DashboardBoard,
-  Column,
-  INITIAL_COLUMNS
-} from "@/components/features/dashboard/dashboard-board";
+import { DashboardBoard, Column } from "@/components/features/dashboard/dashboard-board";
 
 export default function DashboardPage() {
-  const router = useRouter();
   const { isLoggedIn } = useAuth();
   const queryClient = useQueryClient();
 
@@ -59,7 +54,7 @@ export default function DashboardPage() {
         }))
       }));
     }
-    return INITIAL_COLUMNS;
+    return [];
   }, [dashboardsData]);
 
   // SSE 완료 시 서버 데이터 새로고침
@@ -73,8 +68,6 @@ export default function DashboardPage() {
     isInputOpen,
     setIsInputOpen,
     isInputLoading,
-    showErrorToast,
-    setShowErrorToast,
     isModalOpen,
     setIsModalOpen,
     selectedJob,
@@ -152,8 +145,6 @@ export default function DashboardPage() {
       isInputOpen={isInputOpen}
       setIsInputOpen={setIsInputOpen}
       isInputLoading={isInputLoading}
-      showErrorToast={showErrorToast}
-      setShowErrorToast={setShowErrorToast}
       onSseSubmit={handleSseSubmit}
       isModalOpen={isModalOpen}
       setIsModalOpen={setIsModalOpen}
@@ -166,6 +157,7 @@ export default function DashboardPage() {
       sseData={streamingData}
       onDragEnd={handleDragEnd}
       onCloseModal={handleCloseModal}
+      onSaveButtonClick={() => true}
     />
   );
 }
