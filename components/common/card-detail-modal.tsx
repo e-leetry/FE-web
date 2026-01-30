@@ -27,6 +27,7 @@ import {
 } from "@/lib/api/generated/model";
 import { SseStreamingData, useJobSummarizeSse } from "@/lib/hooks/use-job-summarize-sse";
 import { LocalJob } from "@/lib/hooks/use-local-dashboard";
+import { showToast } from "@/store/ui/toast-store";
 
 const cardDetailSchema = z.object({
   companyName: z.string().min(1, "기업명을 입력해주세요"),
@@ -127,12 +128,11 @@ const RecruitmentInfoForm = ({
                 className="h-[44px] rounded-[10px] border-[1.5px] border-[#eeeeee] text-[#5c646f] font-medium gap-1 px-4 shadow-[0px_1px_4px_rgba(0,0,0,0.04)]"
                 onClick={onSummarize}
                 disabled={isSummarizing || disabled}
-                isLoading={isSummarizing}
               >
                 <div className="relative w-[18px] h-[18px]">
                   <Image src="/images/icon/ico_ai.svg" alt="fetch" width={23} height={23} />
                 </div>
-                {isSummarizing ? "불러오는 중..." : "공고 불러오기"}
+                {"공고 불러오기"}
               </Button>
 
               <div className="pointer-events-none absolute left-1/2 bottom-full z-10 mb-2 -translate-x-1/2 flex flex-col items-center opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150">
@@ -279,10 +279,7 @@ export const CardDetailModal = ({
   const { mutate: updateSummary, isPending: isUpdating } = useUpdate();
   const { mutate: deleteSummary, isPending: isDeleting } = useDelete();
 
-  const {
-    data: jobPostingData,
-    isLoading: isFetching
-  } = useGetById(jobPostingId as number, {
+  const { data: jobPostingData, isLoading: isFetching } = useGetById(jobPostingId as number, {
     query: {
       // 로그인 사용자이고 SSE 모드가 아닐 때만 기존 데이터를 불러옴
       enabled: isLoggedIn && !!jobPostingId && isOpen && !sseData
@@ -496,7 +493,9 @@ export const CardDetailModal = ({
         form.setValue("process", internalSseData.hireProcess, { shouldDirty: true });
       }
       if (internalSseData.mainTasks) {
-        form.setValue("mainTasks", formatBulletList(internalSseData.mainTasks), { shouldDirty: true });
+        form.setValue("mainTasks", formatBulletList(internalSseData.mainTasks), {
+          shouldDirty: true
+        });
       }
       if (internalSseData.requirements) {
         form.setValue("qualifications", formatBulletList(internalSseData.requirements), {
@@ -504,14 +503,23 @@ export const CardDetailModal = ({
         });
       }
       if (internalSseData.preferred) {
-        form.setValue("preferences", formatBulletList(internalSseData.preferred), { shouldDirty: true });
+        form.setValue("preferences", formatBulletList(internalSseData.preferred), {
+          shouldDirty: true
+        });
       }
       // 내부 SSE의 메타데이터에서 deadline만 업데이트 (공고 제목, 직무명 제외)
       if (internalSseData.metadata?.deadline) {
         form.setValue("deadline", internalSseData.metadata.deadline, { shouldDirty: true });
       }
     }
-  }, [internalSseData.hireProcess, internalSseData.mainTasks, internalSseData.requirements, internalSseData.preferred, internalSseData.metadata, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
+    internalSseData.hireProcess,
+    internalSseData.mainTasks,
+    internalSseData.requirements,
+    internalSseData.preferred,
+    internalSseData.metadata,
+    isOpen
+  ]);
 
   // 모달 닫힐 때 내부 SSE 리셋
   useEffect(() => {
@@ -641,9 +649,16 @@ export const CardDetailModal = ({
     const targetJobId = effectiveJobId;
     if (targetJobId === undefined) return;
 
+    const showDeleteToast = () =>
+      showToast({
+        leftElement: "공고를 삭제했어요",
+        rightElement: "취소하기"
+      });
+
     if (!isLoggedIn) {
       if (onDeleteLocal) {
         onDeleteLocal(targetJobId);
+        showDeleteToast();
       }
       handleClose();
       return;
@@ -654,6 +669,7 @@ export const CardDetailModal = ({
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
+          showDeleteToast();
           handleClose();
         },
         onError: (error) => {

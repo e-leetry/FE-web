@@ -159,7 +159,7 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
 
     return (
       <div
-        className={`fixed top-10 left-1/2 z-[9999] ${
+        className={`fixed top-3 left-1/2 z-[9999] ${
           isExiting ? "animate-toast-slide-out" : "animate-toast-slide-in"
         }`}
       >
