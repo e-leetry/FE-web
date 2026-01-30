@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const FORM_FIELD_BASE_CLASS =
-  "w-full p-4 border border-[#EEEEEE] rounded-[12px] text-[#282828] text-[15px] bg-white placeholder:text-[#BDBDBD] focus:outline-none focus:border-[#282828] transition-colors";
+  "w-full p-4 border border-[#EEEEEE] rounded-[12px] text-[#282828] text-[15px] bg-white placeholder:text-[#BDBDBD] focus:outline-none focus:border-[#282828] transition-colors disabled:bg-[var(--Text-Gray-5,#F9F9F9)]";
 
 export interface BaseFormFieldProps<
   TFieldValues extends FieldValues = FieldValues,
