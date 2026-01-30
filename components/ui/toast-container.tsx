@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { Toast } from "@/components/ui/toast";
@@ -9,14 +8,9 @@ import { useToastStore } from "@/store/ui/toast-store";
 export function ToastContainer() {
   const toasts = useToastStore((state) => state.toasts);
   const removeToast = useToastStore((state) => state.removeToast);
-  const [mounted, setMounted] = useState(false);
-  const portalTarget = typeof window !== "undefined" ? document.body : null;
+  if (typeof window === "undefined") return null;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || !portalTarget) return null;
+  const portalTarget = document.body;
 
   return createPortal(
     <div className="fixed left-1/2 top-10 z-[9999] flex -translate-x-1/2 flex-col gap-3">

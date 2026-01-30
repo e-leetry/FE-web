@@ -27,11 +27,11 @@ export async function summarizeJobSse(
     const response = await fetch(`${BASE_URL}/api/v1/jobs/summarize/sse`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       credentials: "include",
       body: JSON.stringify({ url }),
-      signal,
+      signal
     });
 
     if (!response.ok) {
@@ -60,17 +60,14 @@ export async function summarizeJobSse(
         const eventMatch = part.match(/event:\s*(\w+)/);
 
         // 모든 data: 라인을 찾아서 합침
-        const dataLines = part.split("\n").filter(line => line.startsWith("data:"));
+        const dataLines = part.split("\n").filter((line) => line.startsWith("data:"));
         const data = dataLines
-          .map(line => line.replace(/^data:\s*/, ""))
+          .map((line) => line.replace(/^data:\s*/, ""))
           .join("\n")
           .trim();
 
         if (eventMatch && data) {
           const eventType = eventMatch[1];
-
-          // 디버깅: 서버에서 받은 원본 데이터 출력
-          console.log(`[SSE 원본 데이터] ${eventType}:`, JSON.stringify(data));
 
           switch (eventType) {
             case "metadata":

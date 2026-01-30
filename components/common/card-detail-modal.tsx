@@ -486,9 +486,15 @@ export const CardDetailModal = ({
     }
   }, [sseData?.hireProcess, sseData?.mainTasks, sseData?.requirements, sseData?.preferred, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 내부 SSE 스트리밍 데이터로 폼 필드 업데이트 (공고 제목, 직무명 제외)
+  // 내부 SSE 스트리밍 데이터로 폼 필드 업데이트 (등록 화면에서는 기업명/직무명도 반영)
   useEffect(() => {
     if (internalSseData && isOpen) {
+      if (!isEdit && internalSseData.metadata?.companyName) {
+        form.setValue("companyName", internalSseData.metadata.companyName, { shouldDirty: true });
+      }
+      if (!isEdit && internalSseData.metadata?.title) {
+        form.setValue("jobTitle", internalSseData.metadata.title, { shouldDirty: true });
+      }
       if (internalSseData.hireProcess) {
         form.setValue("process", internalSseData.hireProcess, { shouldDirty: true });
       }
@@ -507,7 +513,7 @@ export const CardDetailModal = ({
           shouldDirty: true
         });
       }
-      // 내부 SSE의 메타데이터에서 deadline만 업데이트 (공고 제목, 직무명 제외)
+      // 메타데이터는 등록 화면에서 기업명/직무명까지 반영하고 deadline도 업데이트
       if (internalSseData.metadata?.deadline) {
         form.setValue("deadline", internalSseData.metadata.deadline, { shouldDirty: true });
       }
@@ -518,7 +524,8 @@ export const CardDetailModal = ({
     internalSseData.requirements,
     internalSseData.preferred,
     internalSseData.metadata,
-    isOpen
+    isOpen,
+    isEdit
   ]);
 
   // 모달 닫힐 때 내부 SSE 리셋
