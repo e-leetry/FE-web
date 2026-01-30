@@ -25,7 +25,7 @@ import {
   JobPostingSummaryCreateRequestPlatform,
   JobPostingSummaryUpdateRequestPlatform
 } from "@/lib/api/generated/model";
-import { SseStreamingData } from "@/lib/hooks/use-job-summarize-sse";
+import { SseStreamingData, useJobSummarizeSse } from "@/lib/hooks/use-job-summarize-sse";
 import { LocalJob } from "@/lib/hooks/use-local-dashboard";
 
 const cardDetailSchema = z.object({
@@ -51,6 +51,7 @@ interface RecruitmentInfoFormProps {
   isEdit?: boolean;
   onSummarize?: () => void;
   isSummarizing?: boolean;
+  disabled?: boolean;
 }
 
 const RecruitmentInfoForm = ({
@@ -59,7 +60,8 @@ const RecruitmentInfoForm = ({
   labelClass,
   isEdit = false,
   onSummarize,
-  isSummarizing
+  isSummarizing,
+  disabled = false
 }: RecruitmentInfoFormProps) => {
   const companyName = useWatch({ control, name: "companyName" });
   const jobTitle = useWatch({ control, name: "jobTitle" });
@@ -90,6 +92,7 @@ const RecruitmentInfoForm = ({
             className="flex-1"
             labelClassName={labelClass}
             placeholder="기업명을 입력해요"
+            disabled={disabled}
           />
           <FormInput
             control={control}
@@ -98,6 +101,7 @@ const RecruitmentInfoForm = ({
             className="flex-1"
             labelClassName={labelClass}
             placeholder="지원하는 직무를 입력해요"
+            disabled={disabled}
           />
         </div>
       )}
@@ -113,42 +117,41 @@ const RecruitmentInfoForm = ({
           className="flex-1"
           labelClassName="hidden"
           placeholder="원티드, 잡코리아 등 채용공고 주소를 입력해요"
+          disabled={disabled}
           rightElement={
-            isEdit ? (
-              <div className="relative group">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="md"
-                  className="h-[44px] rounded-[10px] border-[1.5px] border-[#eeeeee] text-[#5c646f] font-medium gap-1 px-4 shadow-[0px_1px_4px_rgba(0,0,0,0.04)]"
-                  onClick={onSummarize}
-                  disabled={isSummarizing}
-                  isLoading={isSummarizing}
-                >
-                  <div className="relative w-[18px] h-[18px]">
-                    <Image src="/images/icon/ico_link.svg" alt="link" fill />
-                  </div>
-                  {isSummarizing ? "불러오는 중..." : "공고 불러오기"}
-                </Button>
-
-                <div className="pointer-events-none absolute left-1/2 bottom-full z-10 mb-2 -translate-x-1/2 flex flex-col items-center opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150">
-                  <div className="flex items-center justify-center rounded-[8px] bg-[rgba(40,40,40,0.72)] backdrop-blur-[8px] shadow-[0px_2px_8px_rgba(0,0,0,0.05)] px-2 py-1.5">
-                    <span className="text-[14px] font-medium leading-[1.1935] tracking-[-0.02em] text-white whitespace-nowrap">
-                      불러오면 내용이 초기화돼요
-                    </span>
-                  </div>
-                  <svg
-                    width="16"
-                    height="9"
-                    viewBox="0 0 16 9"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-[rgba(40,40,40,0.72)]"
-                  >
-                    <path d="M0 0H16L8 9Z" fill="currentColor" />
-                  </svg>
+            <div className="relative group">
+              <Button
+                type="button"
+                variant="outline"
+                size="md"
+                className="h-[44px] rounded-[10px] border-[1.5px] border-[#eeeeee] text-[#5c646f] font-medium gap-1 px-4 shadow-[0px_1px_4px_rgba(0,0,0,0.04)]"
+                onClick={onSummarize}
+                disabled={isSummarizing || disabled}
+                isLoading={isSummarizing}
+              >
+                <div className="relative w-[18px] h-[18px]">
+                  <Image src="/images/icon/ico_ai.svg" alt="fetch" width={23} height={23} />
                 </div>
+                {isSummarizing ? "불러오는 중..." : "공고 불러오기"}
+              </Button>
+
+              <div className="pointer-events-none absolute left-1/2 bottom-full z-10 mb-2 -translate-x-1/2 flex flex-col items-center opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-150">
+                <div className="flex items-center justify-center rounded-[8px] bg-[rgba(40,40,40,0.72)] backdrop-blur-[8px] shadow-[0px_2px_8px_rgba(0,0,0,0.05)] px-2 py-1.5">
+                  <span className="text-[14px] font-medium leading-[1.1935] tracking-[-0.02em] text-white whitespace-nowrap">
+                    불러오면 내용이 초기화돼요
+                  </span>
+                </div>
+                <svg
+                  width="16"
+                  height="9"
+                  viewBox="0 0 16 9"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-[rgba(40,40,40,0.72)]"
+                >
+                  <path d="M0 0H16L8 9Z" fill="currentColor" />
+                </svg>
               </div>
-            ) : null
+            </div>
           }
           rightPaddingClassName="pr-[180px]"
           rightElementClassName="right-3"
@@ -163,6 +166,7 @@ const RecruitmentInfoForm = ({
           className="flex-[2]"
           labelClassName={labelClass}
           placeholder="(예시) 서류제출 -> 1차합격 -> 2차합격 -> 최종합격"
+          disabled={disabled}
         />
         <FormInput
           control={control}
@@ -171,6 +175,7 @@ const RecruitmentInfoForm = ({
           className="flex-1"
           labelClassName={labelClass}
           placeholder="YYYY-MM-DD"
+          disabled={disabled}
           onChange={(e) => {
             const value = e.target.value.replace(/[^0-9]/g, "");
             let formattedValue = value;
@@ -193,6 +198,7 @@ const RecruitmentInfoForm = ({
         placeholder="(예시) 전사의 핵심 성과 지표를 정의하고 개선"
         rows={1}
         autoResize
+        disabled={disabled}
       />
 
       <FormTextArea
@@ -203,6 +209,7 @@ const RecruitmentInfoForm = ({
         placeholder="(예시) 다양한 조직과 협업하는 걸 좋아하시는 분"
         rows={1}
         autoResize
+        disabled={disabled}
       />
 
       <FormTextArea
@@ -213,6 +220,7 @@ const RecruitmentInfoForm = ({
         placeholder="(예시) 부서간 이해관계 조정했던 경험이 있으신 분"
         rows={1}
         autoResize
+        disabled={disabled}
       />
     </div>
   );
@@ -221,9 +229,10 @@ const RecruitmentInfoForm = ({
 interface PersonalMemoFormProps {
   control: Control<CardDetailValues>;
   labelClass: string;
+  disabled?: boolean;
 }
 
-const PersonalMemoForm = ({ control, labelClass }: PersonalMemoFormProps) => (
+const PersonalMemoForm = ({ control, labelClass, disabled = false }: PersonalMemoFormProps) => (
   <div className="flex flex-col gap-6">
     <FormTextArea
       control={control}
@@ -233,6 +242,7 @@ const PersonalMemoForm = ({ control, labelClass }: PersonalMemoFormProps) => (
       placeholder="메모를 입력해주세요"
       rows={10}
       autoResize
+      disabled={disabled}
     />
   </div>
 );
@@ -271,15 +281,22 @@ export const CardDetailModal = ({
 
   const {
     data: jobPostingData,
-    isLoading: isFetching,
-    refetch: summarize,
-    isRefetching: isSummarizing
+    isLoading: isFetching
   } = useGetById(jobPostingId as number, {
     query: {
       // 로그인 사용자이고 SSE 모드가 아닐 때만 기존 데이터를 불러옴
       enabled: isLoggedIn && !!jobPostingId && isOpen && !sseData
     }
   });
+
+  // 내부 SSE 훅 (공고 불러오기 버튼용)
+  const {
+    streamingData: internalSseData,
+    startSummarize: startInternalSse,
+    reset: resetInternalSse
+  } = useJobSummarizeSse();
+
+  const isSummarizing = internalSseData.isStreaming;
 
   const isEdit = !!jobPostingId;
 
@@ -303,8 +320,9 @@ export const CardDetailModal = ({
   const effectiveJobId = jobPostingId ?? initialData?.id ?? sseData?.metadata?.jobId;
 
   const handleSummarize = () => {
-    if (!jobPostingId) return;
-    summarize();
+    const jobUrl = form.getValues("jobUrl");
+    if (!jobUrl) return;
+    startInternalSse(jobUrl);
   };
 
   useEffect(() => {
@@ -471,7 +489,39 @@ export const CardDetailModal = ({
     }
   }, [sseData?.hireProcess, sseData?.mainTasks, sseData?.requirements, sseData?.preferred, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const isSseStreaming = sseData?.isStreaming || false;
+  // 내부 SSE 스트리밍 데이터로 폼 필드 업데이트 (공고 제목, 직무명 제외)
+  useEffect(() => {
+    if (internalSseData && isOpen) {
+      if (internalSseData.hireProcess) {
+        form.setValue("process", internalSseData.hireProcess, { shouldDirty: true });
+      }
+      if (internalSseData.mainTasks) {
+        form.setValue("mainTasks", formatBulletList(internalSseData.mainTasks), { shouldDirty: true });
+      }
+      if (internalSseData.requirements) {
+        form.setValue("qualifications", formatBulletList(internalSseData.requirements), {
+          shouldDirty: true
+        });
+      }
+      if (internalSseData.preferred) {
+        form.setValue("preferences", formatBulletList(internalSseData.preferred), { shouldDirty: true });
+      }
+      // 내부 SSE의 메타데이터에서 deadline만 업데이트 (공고 제목, 직무명 제외)
+      if (internalSseData.metadata?.deadline) {
+        form.setValue("deadline", internalSseData.metadata.deadline, { shouldDirty: true });
+      }
+    }
+  }, [internalSseData.hireProcess, internalSseData.mainTasks, internalSseData.requirements, internalSseData.preferred, internalSseData.metadata, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 모달 닫힐 때 내부 SSE 리셋
+  useEffect(() => {
+    if (!isOpen) {
+      resetInternalSse();
+    }
+  }, [isOpen, resetInternalSse]);
+
+  const isSseStreaming = sseData?.isStreaming || internalSseData.isStreaming || false;
+  const isFormDisabled = isSseStreaming;
   const FORM_ID = "card-detail-form";
 
   const onSubmit = (values: CardDetailValues) => {
@@ -707,6 +757,7 @@ export const CardDetailModal = ({
               isEdit={isEdit}
               onSummarize={handleSummarize}
               isSummarizing={isSummarizing}
+              disabled={isFormDisabled}
             />
           ) : (
             <>
@@ -715,7 +766,11 @@ export const CardDetailModal = ({
                   {companyName || "기업명"}
                 </div>
               )}
-              <PersonalMemoForm control={form.control} labelClass={labelClass} />
+              <PersonalMemoForm
+                control={form.control}
+                labelClass={labelClass}
+                disabled={isFormDisabled}
+              />
             </>
           )}
         </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
@@ -113,6 +113,7 @@ function KanbanColumn({
             />
           ))}
           <JobCard
+            id={`add-${column.id}`}
             type="add"
             onClick={() =>
               handleCardClick({ id: -Date.now(), companyName: "", type: "add" }, column.id)
@@ -149,6 +150,7 @@ export function DashboardBoard({
   const router = useRouter();
   const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
   const [prevColumns, setPrevColumns] = useState<Column[]>(columns);
+  const resetPreviewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (columns !== prevColumns) {
     setLocalColumns(null);
@@ -183,7 +185,7 @@ export function DashboardBoard({
   );
 
   const handleDragStart = (event: DragStartEvent) => {
-    const dragActiveId = event.active.id as number;
+    const dragActiveId = Number(event.active.id);
     setActiveId(dragActiveId);
 
     const activeColumn = findColumn(dragActiveId);
@@ -193,12 +195,20 @@ export function DashboardBoard({
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (resetPreviewTimeoutRef.current) {
+        clearTimeout(resetPreviewTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) return;
 
-    const dragActiveId = active.id as number;
-    const overId = over.id as number | string;
+    const dragActiveId = Number(active.id);
+    const overId = over.id;
 
     const activeColumn = findColumn(dragActiveId);
     const overColumn = findColumn(overId);
@@ -262,14 +272,15 @@ export function DashboardBoard({
     const { active, over } = event;
 
     if (!over) {
+      setLocalColumns(null);
       setActiveId(null);
       setOriginalColumnId(null);
       setOriginalIndex(null);
       return;
     }
 
-    const dragActiveId = active.id as number;
-    const overId = over.id as number | string;
+    const dragActiveId = Number(active.id);
+    const overId = over.id;
 
     const currentColumns = localColumns || columns;
 
@@ -283,6 +294,7 @@ export function DashboardBoard({
     const overColumn = findColumnInCurrent(overId);
 
     if (!overColumn) {
+      setLocalColumns(null);
       setActiveId(null);
       setOriginalColumnId(null);
       setOriginalIndex(null);
@@ -293,13 +305,13 @@ export function DashboardBoard({
     const isSamePosition = originalColumnId === overColumn.id && originalIndex === currentCardIndex;
 
     if (isSamePosition || currentCardIndex === -1) {
+      setLocalColumns(null);
       setActiveId(null);
       setOriginalColumnId(null);
       setOriginalIndex(null);
       return;
     }
 
-    // 부모 컴포넌트에 드래그 완료 알림
     onDragEnd(
       dragActiveId,
       overColumn.id,
@@ -309,9 +321,6 @@ export function DashboardBoard({
       currentColumns
     );
 
-    console.log("드롭되었습니다");
-
-    setLocalColumns(null);
     setActiveId(null);
     setOriginalColumnId(null);
     setOriginalIndex(null);
@@ -368,6 +377,7 @@ export function DashboardBoard({
               deadline={activeJob.deadline}
               url={activeJob.url}
               className="rotate-3 scale-105 shadow-xl transition-transform"
+              isOverlay
             />
           ) : null}
         </DragOverlay>

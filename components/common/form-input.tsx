@@ -14,6 +14,7 @@ interface FormInputProps<
   rightElement?: React.ReactNode;
   rightElementClassName?: string;
   rightPaddingClassName?: string;
+  disabled?: boolean;
 }
 
 /**
@@ -34,7 +35,8 @@ export const FormInput = <
   onChange,
   rightElement,
   rightElementClassName,
-  rightPaddingClassName
+  rightPaddingClassName,
+  disabled
 }: FormInputProps<TFieldValues, TName>) => {
   return (
     <FormField
@@ -54,6 +56,7 @@ export const FormInput = <
                   inputClassName
                 )}
                 placeholder={placeholder}
+                disabled={disabled}
                 onChange={(e) => {
                   field.onChange(e);
                   onChange?.(e);

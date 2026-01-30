@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
@@ -18,6 +19,8 @@ interface JobCardProps {
   url?: string;
   className?: string;
   onClick?: () => void;
+  /** DragOverlay 등에서 사용할 때 true로 설정 */
+  isOverlay?: boolean;
 }
 
 const formatDeadline = (deadline?: string) => {
@@ -51,20 +54,27 @@ export function JobCard({
   deadline,
   url,
   className,
-  onClick
+  onClick,
+  isOverlay = false
 }: JobCardProps) {
+  const fallbackId = useId();
+  const sortableId = id ?? fallbackId;
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: id ?? ""
+    id: sortableId,
+    disabled: isOverlay
   });
 
   const formattedDeadline = formatDeadline(deadline);
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.3 : 1,
-    zIndex: isDragging ? 0 : undefined
-  };
+  const style = isOverlay
+    ? undefined
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.3 : 1,
+        zIndex: isDragging ? 0 : undefined
+      };
 
   // type=add 카드
   if (type === "add") {

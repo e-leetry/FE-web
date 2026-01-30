@@ -12,6 +12,7 @@ interface FormTextAreaProps<
   textareaClassName?: string;
   rows?: number;
   autoResize?: boolean;
+  disabled?: boolean;
 }
 
 const TEXTAREA_BASE_CLASS = cn(FORM_FIELD_BASE_CLASS, "resize-none overflow-hidden");
@@ -28,7 +29,8 @@ export const FormTextArea = <
   labelClassName,
   textareaClassName,
   rows = 1,
-  autoResize = false
+  autoResize = false,
+  disabled
 }: FormTextAreaProps<TFieldValues, TName>) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -70,6 +72,7 @@ export const FormTextArea = <
               className={cn(TEXTAREA_BASE_CLASS, textareaClassName)}
               placeholder={placeholder}
               rows={rows}
+              disabled={disabled}
             />
           </FormControl>
           <FormMessage />

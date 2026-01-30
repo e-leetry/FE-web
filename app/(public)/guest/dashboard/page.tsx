@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { useAuth } from "@/lib/auth/useAuth";
 import {
   useLocalDashboard,
@@ -121,7 +122,7 @@ export default function GuestDashboardPage() {
     handleSseSubmit,
     handleCloseModal
   } = useDashboardCommon({
-    currentPath: "/guest/dashboard",
+    currentPath: "/guest/dashboard" as Route<"/guest/dashboard">,
     columns,
     onSseMetadata: handleSseMetadata,
     onSseComplete: handleSseComplete
