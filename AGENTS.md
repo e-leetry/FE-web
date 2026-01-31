@@ -1,95 +1,248 @@
-# Repository Guidelines
+````md
+# 프론트엔드 프로젝트 개발 가이드
 
-## Project Structure & Module Organization
+## 1. 프로젝트 개요
+- **프레임워크**: Next.js 16 (App Router)
+- **언어**: TypeScript (strict mode)
+- **스타일링**: Tailwind CSS + shadcn/ui
+- **상태 관리**
+  - 서버 상태: React Query
+  - 클라이언트 전역 상태: Zustand
+- nextjs16부터 middleware.ts 파일은 proxy.ts 로 대체되었음
 
-- `app/`: App Router entrypoints. `(public)` contains the landing page, `(auth)` holds gated routes. Shared layout lives in `app/layout.tsx`.
-- `components/` and `providers.tsx`: Reusable UI and context wrappers.
-- `lib/`: Helpers including `lib/api/fetcher.ts` (SSR fetch proxy). `store/` holds Zustand state.
-- `.env.*`: Environment presets; `.env.local` is the default for local dev, `.env.dev` and `.env.prod` model preview/prod settings.
+---
 
-## Build, Test, and Development Commands
+## 2. 프로젝트 구조
 
-- `pnpm install`: Install dependencies (pnpm 9 as declared in `packageManager`).
-- `pnpm run dev`: Start Next.js dev server. Set `ENV_FILE=.env.dev` (or other) to load alternate env files.
-- `pnpm run build:env`: Build with env overrides (e.g., `ENV_FILE=.env.prod pnpm run build:env`). `pnpm run build` follows Next defaults.
-- `pnpm run lint`: Run ESLint via `eslint.config.mjs`.
+```text
+├── app/              # Next.js App Router 페이지
+├── components/
+│   ├── ui/          # shadcn/ui 기본 컴포넌트
+│   ├── shared/      # 재사용 가능한 공통 컴포넌트
+│   └── features/    # 기능별 컴포넌트 (도메인별 분리)
+├── lib/             # 유틸리티 함수, 헬퍼
+├── hooks/           # 커스텀 훅
+├── stores/          # Zustand 스토어
+├── api/             # API 클라이언트 (Orval 자동 생성)
+├── types/           # TypeScript 타입 정의
+└── constants/       # 상수 정의
+````
 
-## Coding Style & Naming Conventions
+---
 
-- TypeScript/React with strict typing (`tsconfig.json`). Prefer function components and hooks.
-- Keep components colocated under `app/*` when route-specific; extract shared UI into `components/`.
-- Use camelCase for variables/functions, PascalCase for components, SCREAMING_SNAKE for env vars.
-- Run Prettier (`prettier.config.cjs`) before committing; rely on ESLint for lint rules.
+## 3. 컴포넌트 규칙
 
-## Testing Guidelines
+* 함수형 컴포넌트만 사용 (React 19)
+* Props는 interface로 명시
+* 서버 컴포넌트 우선, 필요한 경우에만 `'use client'`
+* 재사용 컴포넌트: `components/shared`
+* 도메인 컴포넌트: `components/features/[도메인]`
 
-- No automated tests yet; add unit tests under `__tests__/` mirroring the directory under test.
-- Use Jest or the recommended framework for Next.js; name files `*.test.ts[x]`.
-- Include edge cases for SSR vs client components and API proxy behavior.
+```ts
+interface ButtonProps {
+  label: string;
+  onClick: () => void;
+  variant?: 'primary' | 'secondary';
+}
 
-## Commit & Pull Request Guidelines
+export function Button({ label, onClick, variant = 'primary' }: ButtonProps) {
+  return <button onClick={onClick}>{label}</button>;
+}
+```
 
-- Commit messages are short and imperative (e.g., `add mock POST form`). Group related changes together.
-- PRs should describe scope, linked issues, screenshots for UI tweaks, and mention env changes (e.g., new `.env.*` keys).
-- Ensure `pnpm run lint` and relevant builds pass before requesting review.
+---
 
-## 한국어로 작성한다
+## 4. 상태 관리
 
-기술 스택:
-- React (함수형 컴포넌트)
-- Tailwind CSS
-- shadcn/ui 컴포넌트 패턴 (Radix 기반)
-- class-variance-authority(CVA) 사용 가능
+### 4.1 서버 상태 (React Query)
 
-규칙:
-1. 가능한 경우 shadcn/ui 컴포넌트(Button, Input, Dialog, Select 등)를 기반으로 구현한다.
-2. shadcn/ui에 없는 경우에만 일반 JSX + Tailwind로 구현한다.
-3. 스타일은 디자인 토큰처럼 일관되게 유지한다:
-    - border-radius: rounded-lg
-    - spacing: gap-2 / gap-4 / px-4 py-2
-    - font-size: text-sm / text-base / text-lg
-4. hover / focus / disabled 상태를 반드시 포함한다.
-5. 접근성(a11y)을 고려한다 (label, aria, focus-visible).
-6. className가 길어질 경우 cn() 유틸을 사용한다.
+```ts
+const { data } = useQuery({
+  queryKey: ['users', userId],
+  queryFn: () => fetchUser(userId),
+  staleTime: 5 * 60 * 1000,
+});
+```
 
-출력 형식:
-- React 컴포넌트 코드만 출력
-- 불필요한 설명은 하지 않는다
+### 4.2 클라이언트 전역 상태 (Zustand)
 
-추가 규칙:
-- 임의의 custom color(hex, rgb)를 사용하지 않는다.
-- Tailwind 기본 색상(gray, slate, zinc, blue 등)만 사용한다.
-- shadow는 shadow-sm 또는 shadow-md만 사용한다.
-- transition은 transition-colors 또는 transition-all만 사용한다.
-- 컴포넌트 단위로 분리 가능한 경우 분리한다.
+```ts
+interface UserStore {
+  user: User | null;
+  setUser: (user: User) => void;
+}
 
-중요:
-- 버튼은 반드시 shadcn/ui Button 패턴을 따른다.
-- 모달은 Dialog, 드롭다운은 DropdownMenu 패턴을 따른다.
-- 직접 구현하지 말고 shadcn/ui 구조를 우선 사용한다.
+export const useUserStore = create<UserStore>((set) => ({
+  user: null,
+  setUser: (user) => set({ user }),
+}));
+```
 
-## Lint 규칙 (필수)
+---
 
-코드 작성 시 반드시 `pnpm run lint`를 통과해야 한다. 다음 규칙을 준수한다:
+## 5. API 통합
 
-### React Hooks 규칙
-- useEffect, useCallback, useMemo 등의 의존성 배열을 정확히 작성한다.
-- useEffect 내에서 setState를 동기적으로 호출하지 않는다.
-  - BAD: `useEffect(() => { setState(value); }, [dep]);`
-  - GOOD: `useEffect(() => { setTimeout(() => setState(value), 0); }, [dep]);`
-- useRef의 `.current`를 렌더 중에 업데이트하지 않는다.
-  - BAD: `const ref = useRef(value); ref.current = newValue; // 렌더 중`
-  - GOOD: `useEffect(() => { ref.current = newValue; }, [newValue]);`
+* Orval로 Swagger 기반 자동 생성
+* React Query와 함께 사용
+* Axios 인터셉터로 인증/에러 공통 처리
 
-### 일반 규칙
-- 익명 함수를 default export하지 않는다.
-  - BAD: `export default () => {}`
-  - GOOD: `const MyComponent = () => {}; export default MyComponent;`
-- 사용하지 않는 변수/import는 제거한다.
-- any 타입 사용을 피하고 명시적 타입을 사용한다.
+```ts
+export function useUsers() {
+  return useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+  });
+}
+```
 
-### 작업 완료 전 확인
-- 코드 작성 후 반드시 `pnpm run lint`를 실행하여 에러가 없는지 확인한다.
-- 린트 에러가 있으면 커밋하지 않고 수정한다.
+---
+
+## 6. 스타일링
+
+* Tailwind CSS + shadcn/ui
+* `clsx` + `tailwind-merge`
+* `class-variance-authority`로 variant 관리
+
+```ts
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+---
+
+## 7. 폼
+
+* React Hook Form + Zod
+* 에러 메시지는 한국어
+
+---
+
+## 8. 드래그 앤 드롭
+
+* @dnd-kit 사용
+* 접근성 고려
+
+---
+
+## 9. 커스텀 훅
+
+* 복잡한 로직은 hooks로 분리
+* use 접두사, 타입 안정성 보장
+
+---
+
+## 10. 에러 처리
+
+* `error.tsx` 전역 에러 바운더리
+* React Query `onError` 사용
+* 사용자 메시지는 한국어
+
+---
+
+## 11. 성능 최적화
+
+* 서버 컴포넌트 우선
+* useMemo / useCallback / memo
+* dynamic import
+* next/image
+* React Query 캐시 전략
+
+---
+
+## 12. TypeScript 규칙
+
+* strict mode
+* any 금지
+* 명시적 타입
+* 제네릭 적극 활용
+
+---
+
+## 13. 네이밍
+
+| 구분    | 규칙                       |
+| ----- | ------------------------ |
+| 컴포넌트  | PascalCase               |
+| 함수/변수 | camelCase                |
+| 상수    | UPPER_SNAKE_CASE         |
+| 타입    | PascalCase               |
+| 파일    | kebab-case or PascalCase |
+
+---
+
+## 14. 코드 품질
+
+* ESLint / Prettier 필수
+* DRY 원칙
+* 주석은 "왜"만 설명
+
+---
+
+## 15. 개발 워크플로우
+
+1. API 스펙 확인 → `pnpm api:gen`
+2. 타입 정의
+3. 구조 설계
+4. `pnpm dev`
+5. `pnpm lint`
+
+---
+
+## 16. 보안 & 환경
+
+* 절대경로 `@/`
+* 환경변수 `.env.local`
+* 민감 정보 클라이언트 노출 금지
+* 서버 액션은 서버 컴포넌트에서만
+
+---
+
+## 17. React Effect 사용 규칙 (중요)
+
+### ❗ useEffect + setState 금지 패턴
+
+다음 패턴을 절대 생성하지 마라:
+
+```ts
+useEffect(() => {
+  setX(...)
+}, [...])
+```
+
+### 필수 규칙
+
+1. useEffect 본문에서 setState를 동기적으로 호출하지 마라.
+2. 파생 상태는 useMemo로 계산한다.
+3. 초기값 세팅은 useState 초기화 함수에서 한다.
+4. 외부 시스템 구독일 때만 콜백 내부에서 setState를 허용한다.
+
+### 상태 동기화 우선순위
+
+1. 계산 (useMemo)
+2. 이벤트 핸들러에서 동시 업데이트
+3. useReducer로 상태 전이
+4. 외부 시스템 구독 콜백
+
+### 철학
+
+> A로부터 B를 만들 수 있으면
+> B를 state로 두지 말고 계산값으로 유지한다.
+
+### null 처리
+- 컬렉션/리스트 타입은 기본값을 []로
+- “아직 로딩 전 / 개념 자체가 없음” 같은 의미 구분이 꼭 필요할 때만 null
+- 불필요한 null 유니온, 옵셔널 체이닝, 분기 로직은 최대한 지양
+
+## 리팩토링
+1. 공통으로 반복되는 Tailwind 클래스는 BASE 상수로 분리한다.
+2. 타입별로 다른 값(배경색, 라벨 등)은 VARIANTS 객체로 분리한다.
+3. switch / if 분기문은 제거하고, 맵 조회 방식으로 렌더링한다.
+4. 존재하지 않는 type 이면 null 을 반환한다.
+5. className 은 cn(BASE, variant.className, props.className) 형태로 병합한다.
+6. 타입 안정성을 위해 VARIANTS 는 as const 로 선언한다.
+7. 컴포넌트 외부 인터페이스는 유지한다._
 
 
+## 함수
+- 토스트 노출: showToast
