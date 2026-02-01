@@ -18,7 +18,9 @@ export default function DashboardPage() {
 
   const { data: dashboardsData } = useGetDashboards({
     query: {
-      enabled: isLoggedIn
+      enabled: isLoggedIn,
+      refetchOnWindowFocus: true,
+      staleTime: 0
     }
   });
 
@@ -111,7 +113,8 @@ export default function DashboardPage() {
             id: job.id,
             companyName: job.companyName,
             title: job.title,
-            deadline: job.deadline
+            deadline: job.deadline,
+            url: job.url
           }))
         }));
       });

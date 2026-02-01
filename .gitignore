@@ -38,5 +38,5 @@ next-env.d.ts
 
 # custom
 .output.txt
-
+be
 .mcp.json

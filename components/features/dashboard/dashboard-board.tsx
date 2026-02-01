@@ -19,7 +19,6 @@ import {
 } from "@/lib/utils/kanban-utils";
 import type { Job, Column } from "@/lib/utils/kanban-utils";
 import {
-  closestCorners,
   DndContext,
   DragEndEvent,
   DragOverEvent,
@@ -27,6 +26,9 @@ import {
   DragStartEvent,
   KeyboardSensor,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
+  type CollisionDetection,
   useDroppable,
   useSensor,
   useSensors
@@ -39,6 +41,15 @@ import {
 import { buildLoginRedirect } from "@/lib/auth/routes";
 
 export type { Job, Column } from "@/lib/utils/kanban-utils";
+
+const dashboardCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+
+  return rectIntersection(args);
+};
 
 interface DashboardBoardProps {
   columns: Column[];
@@ -85,7 +96,8 @@ function KanbanColumn({
   handleCardClick: (job: Job, columnId: number) => void;
 }) {
   const { setNodeRef } = useDroppable({
-    id: column.id
+    id: column.id,
+    data: { type: "column", columnId: column.id }
   });
 
   return (
@@ -224,16 +236,33 @@ export function DashboardBoard({
     const numericOverId = typeof rawOverId === "number" ? rawOverId : parseInt(String(rawOverId), 10);
     if (isNaN(numericOverId)) return; // add 카드 같은 비정상 ID면 무시
 
+    // over.data.current.type이 "column"이면 컬럼 위에 드롭
+    const isOverColumn = over.data?.current?.type === "column";
+    const dragY = active.rect.current.translated?.top ?? 0;
+    const overCenterY = over.rect.top + over.rect.height / 2;
+    const shouldPlaceAfter = !isOverColumn && dragY > overCenterY;
+
     setLocalColumns((prev) => {
       const currentColumns = prev || columns;
 
       const activeColumn = findColumnByIdOrJob(currentColumns, dragActiveId);
-      const overColumn = findColumnByIdOrJob(currentColumns, numericOverId);
+
+      let overColumn: Column | undefined;
+      if (isOverColumn) {
+        // 컬럼 위에 드롭 - 컬럼 ID로 직접 찾기
+        overColumn = currentColumns.find((col) => col.id === numericOverId);
+      } else {
+        // job 위에 드롭 - job이 있는 컬럼 찾기
+        overColumn = currentColumns.find((col) => col.jobs.some((job) => job.id === numericOverId));
+      }
 
       if (!activeColumn || !overColumn) return prev;
 
       if (activeColumn.id === overColumn.id) {
-        return reorderJobsInColumn(currentColumns, activeColumn.id, dragActiveId, numericOverId);
+        return reorderJobsInColumn(currentColumns, activeColumn.id, dragActiveId, numericOverId, {
+          insertAfter: shouldPlaceAfter,
+          isColumnDrop: isOverColumn
+        });
       }
 
       return moveJobBetweenColumns(
@@ -241,7 +270,11 @@ export function DashboardBoard({
         activeColumn.id,
         overColumn.id,
         dragActiveId,
-        numericOverId
+        numericOverId,
+        {
+          insertAfter: shouldPlaceAfter,
+          isColumnDrop: isOverColumn
+        }
       );
     });
   };
@@ -295,7 +328,16 @@ export function DashboardBoard({
       cancelDrag();
       return;
     }
-    const overColumn = findColumnByIdOrJob(currentColumns, numericOverId);
+
+    // over.data.current.type이 "column"이면 컬럼 위에 드롭
+    const isOverColumn = over.data?.current?.type === "column";
+
+    let overColumn: Column | undefined;
+    if (isOverColumn) {
+      overColumn = currentColumns.find((col) => col.id === numericOverId);
+    } else {
+      overColumn = currentColumns.find((col) => col.jobs.some((job) => job.id === numericOverId));
+    }
 
     if (!overColumn) {
       cancelDrag();
@@ -342,7 +384,7 @@ export function DashboardBoard({
     <div className="flex w-full flex-1 flex-col overflow-x-auto bg-[#F6F7F9]">
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={dashboardCollisionDetection}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}

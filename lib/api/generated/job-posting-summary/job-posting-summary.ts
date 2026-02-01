@@ -21,6 +21,7 @@ import type {
   ApiResponseUnit,
   JobPostingSummaryCreateRequest,
   JobPostingSummaryMoveRequest,
+  JobPostingSummaryRenameRequest,
   JobPostingSummaryResponse,
   JobPostingSummaryUpdateRequest
 } from '.././model';
@@ -441,5 +442,70 @@ export const useUpdate = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateMutationOptions(options), queryClient);
+    }
+    /**
+ * 제목과 회사명만 수정합니다.
+ * @summary 채용 공고 요약 기본 정보 수정
+ */
+export const rename = (
+    id: number,
+    jobPostingSummaryRenameRequest: BodyType<JobPostingSummaryRenameRequest>,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApiResponseUnit>(
+      {url: `/api/v1/job-posting-summaries/${id}/rename`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: jobPostingSummaryRenameRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getRenameMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rename>>, TError,{id: number;data: BodyType<JobPostingSummaryRenameRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rename>>, TError,{id: number;data: BodyType<JobPostingSummaryRenameRequest>}, TContext> => {
+
+const mutationKey = ['rename'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rename>>, {id: number;data: BodyType<JobPostingSummaryRenameRequest>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rename(id,data,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RenameMutationResult = NonNullable<Awaited<ReturnType<typeof rename>>>
+    export type RenameMutationBody = BodyType<JobPostingSummaryRenameRequest>
+    export type RenameMutationError = ErrorType<unknown>
+
+    /**
+ * @summary 채용 공고 요약 기본 정보 수정
+ */
+export const useRename = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rename>>, TError,{id: number;data: BodyType<JobPostingSummaryRenameRequest>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof rename>>,
+        TError,
+        {id: number;data: BodyType<JobPostingSummaryRenameRequest>},
+        TContext
+      > => {
+      return useMutation(getRenameMutationOptions(options), queryClient);
     }
     

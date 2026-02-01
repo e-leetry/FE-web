@@ -1,5 +1,3 @@
-import { arrayMove } from "@dnd-kit/sortable";
-
 export interface Job {
   id: number;
   companyName: string;
@@ -30,32 +28,49 @@ export function findColumnByIdOrJob(columns: Column[], id: number): Column | und
 /**
  * 같은 컬럼 내에서 Job 순서를 변경합니다.
  */
+interface DropPositionOptions {
+  insertAfter?: boolean;
+  isColumnDrop?: boolean;
+}
+
 export function reorderJobsInColumn(
   columns: Column[],
   columnId: number,
   activeJobId: number,
-  overId: number
+  overId: number,
+  options: DropPositionOptions = {}
 ): Column[] {
+  const { insertAfter = false, isColumnDrop } = options;
   const column = columns.find((col) => col.id === columnId);
   if (!column) return columns;
 
-  const columnJobs = [...column.jobs];
-  const activeIndex = columnJobs.findIndex((job) => job.id === activeJobId);
+  const droppingOnColumn = isColumnDrop ?? overId === columnId;
 
-  const overJobIndex = columnJobs.findIndex((job) => job.id === overId);
-  const isColumnDrop = overId === columnId && activeJobId === overId;
-  const targetIndex =
-    isColumnDrop || (overJobIndex === -1 && overId === columnId)
-      ? columnJobs.length - 1
-      : overJobIndex;
-
-  if (activeIndex === -1 || targetIndex === -1 || activeIndex === targetIndex) {
+  if (!droppingOnColumn && activeJobId === overId) {
     return columns;
   }
 
-  const newJobs = arrayMove(columnJobs, activeIndex, targetIndex);
+  const activeJob = column.jobs.find((job) => job.id === activeJobId);
+  if (!activeJob) return columns;
 
-  return columns.map((col) => (col.id === columnId ? { ...col, jobs: newJobs } : col));
+  const remainingJobs = column.jobs.filter((job) => job.id !== activeJobId);
+
+  let insertIndex: number;
+  if (droppingOnColumn) {
+    insertIndex = remainingJobs.length;
+  } else {
+    const overIndex = remainingJobs.findIndex((job) => job.id === overId);
+    if (overIndex === -1) {
+      return columns;
+    }
+    insertIndex = insertAfter ? overIndex + 1 : overIndex;
+  }
+
+  const nextJobs = [...remainingJobs];
+  const clampedIndex = Math.min(Math.max(insertIndex, 0), nextJobs.length);
+  nextJobs.splice(clampedIndex, 0, activeJob);
+
+  return columns.map((col) => (col.id === columnId ? { ...col, jobs: nextJobs } : col));
 }
 
 /**
@@ -66,30 +81,41 @@ export function moveJobBetweenColumns(
   fromColumnId: number,
   toColumnId: number,
   activeJobId: number,
-  overId: number
+  overId: number,
+  options: DropPositionOptions = {}
 ): Column[] {
+  const { insertAfter = false, isColumnDrop } = options;
   const fromColumn = columns.find((col) => col.id === fromColumnId);
   const toColumn = columns.find((col) => col.id === toColumnId);
 
   if (!fromColumn || !toColumn) return columns;
 
-  const fromJobs = [...fromColumn.jobs];
+  const activeJob = fromColumn.jobs.find((job) => job.id === activeJobId);
+  if (!activeJob) return columns;
+
+  const fromJobs = fromColumn.jobs.filter((job) => job.id !== activeJobId);
   const toJobs = [...toColumn.jobs];
 
-  const activeIndex = fromJobs.findIndex((job) => job.id === activeJobId);
-  if (activeIndex === -1) return columns;
+  const droppingOnColumn = isColumnDrop ?? overId === toColumnId;
+  let insertIndex: number;
 
-  const [removedJob] = fromJobs.splice(activeIndex, 1);
+  if (droppingOnColumn || toJobs.length === 0) {
+    insertIndex = toJobs.length;
+  } else {
+    const overIndex = toJobs.findIndex((job) => job.id === overId);
+    if (overIndex === -1) {
+      return columns;
+    }
+    insertIndex = insertAfter ? overIndex + 1 : overIndex;
+  }
 
-  const overJobIndex = toJobs.findIndex((job) => job.id === overId);
-  const isColumnDrop = overId === toColumnId && overJobIndex === -1;
-  const insertIndex = isColumnDrop || overJobIndex === -1 ? toJobs.length : overJobIndex;
-
-  toJobs.splice(insertIndex, 0, removedJob);
+  const nextToJobs = [...toJobs];
+  const clampedIndex = Math.min(Math.max(insertIndex, 0), nextToJobs.length);
+  nextToJobs.splice(clampedIndex, 0, activeJob);
 
   return columns.map((col) => {
     if (col.id === fromColumnId) return { ...col, jobs: fromJobs };
-    if (col.id === toColumnId) return { ...col, jobs: toJobs };
+    if (col.id === toColumnId) return { ...col, jobs: nextToJobs };
     return col;
   });
 }

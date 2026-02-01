@@ -14,6 +14,7 @@ export * from './jobPostingContent';
 export * from './jobPostingSummaryCreateRequest';
 export * from './jobPostingSummaryCreateRequestPlatform';
 export * from './jobPostingSummaryMoveRequest';
+export * from './jobPostingSummaryRenameRequest';
 export * from './jobPostingSummaryResponse';
 export * from './jobPostingSummaryResponsePlatform';
 export * from './jobPostingSummaryUpdateRequest';

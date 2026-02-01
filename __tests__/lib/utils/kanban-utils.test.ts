@@ -61,7 +61,7 @@ describe("reorderJobsInColumn", () => {
   it("같은 컬럼 내에서 Job 순서를 변경할 수 있다 (앞으로 이동)", () => {
     const columns = createMockColumns();
     // Job 3(인덱스 2)을 Job 1(인덱스 0) 위치로 이동 → [3, 1, 2]
-    const result = reorderJobsInColumn(columns, 1, 3, 1);
+    const result = reorderJobsInColumn(columns, 1, 3, 1, { isColumnDrop: false });
 
     const interestColumn = result.find((col) => col.id === 1);
     expect(interestColumn?.jobs.map((j) => j.id)).toEqual([3, 1, 2]);
@@ -69,7 +69,7 @@ describe("reorderJobsInColumn", () => {
 
   it("같은 컬럼 내에서 Job 순서를 변경할 수 있다 (뒤로 이동)", () => {
     const columns = createMockColumns();
-    const result = reorderJobsInColumn(columns, 1, 1, 3);
+    const result = reorderJobsInColumn(columns, 1, 1, 3, { insertAfter: true });
 
     const interestColumn = result.find((col) => col.id === 1);
     expect(interestColumn?.jobs.map((j) => j.id)).toEqual([2, 3, 1]);
@@ -77,7 +77,7 @@ describe("reorderJobsInColumn", () => {
 
   it("overId가 컬럼 ID면 맨 끝으로 이동한다", () => {
     const columns = createMockColumns();
-    const result = reorderJobsInColumn(columns, 1, 1, 1);
+    const result = reorderJobsInColumn(columns, 1, 1, 1, { isColumnDrop: true });
 
     const interestColumn = result.find((col) => col.id === 1);
     // Job 1은 이미 첫 번째이고 overId도 1(컬럼ID와 같음)이면 맨 끝으로 이동
@@ -101,10 +101,18 @@ describe("reorderJobsInColumn", () => {
 
   it("다른 컬럼은 영향받지 않는다", () => {
     const columns = createMockColumns();
-    const result = reorderJobsInColumn(columns, 1, 1, 3);
+    const result = reorderJobsInColumn(columns, 1, 1, 3, { insertAfter: true });
 
     const appliedColumn = result.find((col) => col.id === 2);
     expect(appliedColumn?.jobs.map((j) => j.id)).toEqual([4]);
+  });
+
+  it("overId 아래 영역에 드롭하면 그 Job 뒤에 추가 된다", () => {
+    const columns = createMockColumns();
+    const result = reorderJobsInColumn(columns, 1, 2, 3, { insertAfter: true });
+
+    const interestColumn = result.find((col) => col.id === 1);
+    expect(interestColumn?.jobs.map((j) => j.id)).toEqual([1, 3, 2]);
   });
 });
 
@@ -133,7 +141,15 @@ describe("moveJobBetweenColumns", () => {
 
   it("overId가 컬럼 ID면 맨 끝에 추가한다", () => {
     const columns = createMockColumns();
-    const result = moveJobBetweenColumns(columns, 1, 2, 1, 2);
+    const result = moveJobBetweenColumns(columns, 1, 2, 1, 2, { isColumnDrop: true });
+
+    const appliedColumn = result.find((col) => col.id === 2);
+    expect(appliedColumn?.jobs.map((j) => j.id)).toEqual([4, 1]);
+  });
+
+  it("다른 컬럼에 드롭할 때 아래 영역이면 해당 Job 뒤에 추가한다", () => {
+    const columns = createMockColumns();
+    const result = moveJobBetweenColumns(columns, 1, 2, 1, 4, { insertAfter: true });
 
     const appliedColumn = result.find((col) => col.id === 2);
     expect(appliedColumn?.jobs.map((j) => j.id)).toEqual([4, 1]);
@@ -196,4 +212,3 @@ describe("findJobIndexInColumn", () => {
     expect(findJobIndexInColumn(emptyColumn, 1)).toBe(-1);
   });
 });
-

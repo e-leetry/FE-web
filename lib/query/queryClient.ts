@@ -4,8 +4,11 @@ const queryClientConfig: QueryClientConfig = {
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 1000 * 30,
-      refetchOnWindowFocus: false
+      staleTime: 0,
+      gcTime: 0,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      refetchOnMount: "always"
     }
   }
 };
