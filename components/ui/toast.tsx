@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
@@ -107,37 +107,31 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
     { className, variant = "success", visible, onClose, leftElement, rightElement, ...props },
     ref
   ) => {
+    const onCloseRef = useRef(onClose);
     const [isExiting, setIsExiting] = useState(false);
+
+    useEffect(() => {
+      onCloseRef.current = onClose;
+    }, [onClose]);
 
     useEffect(() => {
       if (!visible) return;
 
-      const timers: ReturnType<typeof setTimeout>[] = [];
+      setIsExiting(false);
 
-      timers.push(
-        setTimeout(() => {
-          setIsExiting(false);
-        }, 0)
-      );
+      const exitTimer = setTimeout(() => {
+        setIsExiting(true);
+      }, TOAST_DURATION - ANIMATION_DURATION);
 
-      // exit 애니메이션 시작 타이머
-      timers.push(
-        setTimeout(() => {
-          setIsExiting(true);
-        }, TOAST_DURATION - ANIMATION_DURATION)
-      );
-
-      // 완전히 숨기고 onClose 호출 타이머
-      timers.push(
-        setTimeout(() => {
-          onClose();
-        }, TOAST_DURATION)
-      );
+      const closeTimer = setTimeout(() => {
+        onCloseRef.current();
+      }, TOAST_DURATION);
 
       return () => {
-        timers.forEach(clearTimeout);
+        clearTimeout(exitTimer);
+        clearTimeout(closeTimer);
       };
-    }, [visible, onClose]);
+    }, [visible]);
 
     const renderLeftElement = () => {
       if (typeof leftElement === "string") {
