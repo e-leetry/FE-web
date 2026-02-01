@@ -10,7 +10,7 @@ export interface Job {
 }
 
 export interface Column {
-  id: string;
+  id: number;
   title: string;
   jobs: Job[];
 }
@@ -18,16 +18,13 @@ export interface Column {
 /**
  * ID 또는 Job ID로 컬럼을 찾습니다.
  */
-export function findColumnByIdOrJob(
-  columns: Column[],
-  id: number | string
-): Column | undefined {
-  // 컬럼 ID로 직접 찾기
-  const columnById = columns.find((col) => col.id === id);
-  if (columnById) return columnById;
+export function findColumnByIdOrJob(columns: Column[], id: number): Column | undefined {
+  // Job ID로 컬럼 찾기 (ID가 컬럼 ID와 같아도 Job을 우선)
+  const columnByJob = columns.find((col) => col.jobs.some((job) => job.id === id));
+  if (columnByJob) return columnByJob;
 
-  // Job ID로 컬럼 찾기
-  return columns.find((col) => col.jobs.some((job) => job.id === id));
+  // 컬럼 ID로 직접 찾기
+  return columns.find((col) => col.id === id);
 }
 
 /**
@@ -35,9 +32,9 @@ export function findColumnByIdOrJob(
  */
 export function reorderJobsInColumn(
   columns: Column[],
-  columnId: string,
+  columnId: number,
   activeJobId: number,
-  overId: number | string
+  overId: number
 ): Column[] {
   const column = columns.find((col) => col.id === columnId);
   if (!column) return columns;
@@ -45,21 +42,20 @@ export function reorderJobsInColumn(
   const columnJobs = [...column.jobs];
   const activeIndex = columnJobs.findIndex((job) => job.id === activeJobId);
 
-  // overId가 컬럼 ID면 맨 끝으로, 아니면 해당 Job 위치로
-  const overIndex =
-    columnId === overId
+  const overJobIndex = columnJobs.findIndex((job) => job.id === overId);
+  const isColumnDrop = overId === columnId && activeJobId === overId;
+  const targetIndex =
+    isColumnDrop || (overJobIndex === -1 && overId === columnId)
       ? columnJobs.length - 1
-      : columnJobs.findIndex((job) => job.id === overId);
+      : overJobIndex;
 
-  if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
+  if (activeIndex === -1 || targetIndex === -1 || activeIndex === targetIndex) {
     return columns;
   }
 
-  const newJobs = arrayMove(columnJobs, activeIndex, overIndex);
+  const newJobs = arrayMove(columnJobs, activeIndex, targetIndex);
 
-  return columns.map((col) =>
-    col.id === columnId ? { ...col, jobs: newJobs } : col
-  );
+  return columns.map((col) => (col.id === columnId ? { ...col, jobs: newJobs } : col));
 }
 
 /**
@@ -67,10 +63,10 @@ export function reorderJobsInColumn(
  */
 export function moveJobBetweenColumns(
   columns: Column[],
-  fromColumnId: string,
-  toColumnId: string,
+  fromColumnId: number,
+  toColumnId: number,
   activeJobId: number,
-  overId: number | string
+  overId: number
 ): Column[] {
   const fromColumn = columns.find((col) => col.id === fromColumnId);
   const toColumn = columns.find((col) => col.id === toColumnId);
@@ -83,14 +79,13 @@ export function moveJobBetweenColumns(
   const activeIndex = fromJobs.findIndex((job) => job.id === activeJobId);
   if (activeIndex === -1) return columns;
 
-  // overId가 컬럼 ID면 맨 끝으로, 아니면 해당 Job 위치로
-  const overIndex =
-    toColumnId === overId
-      ? toJobs.length
-      : toJobs.findIndex((job) => job.id === overId);
-
   const [removedJob] = fromJobs.splice(activeIndex, 1);
-  toJobs.splice(overIndex === -1 ? toJobs.length : overIndex, 0, removedJob);
+
+  const overJobIndex = toJobs.findIndex((job) => job.id === overId);
+  const isColumnDrop = overId === toColumnId && overJobIndex === -1;
+  const insertIndex = isColumnDrop || overJobIndex === -1 ? toJobs.length : overJobIndex;
+
+  toJobs.splice(insertIndex, 0, removedJob);
 
   return columns.map((col) => {
     if (col.id === fromColumnId) return { ...col, jobs: fromJobs };
@@ -103,8 +98,8 @@ export function moveJobBetweenColumns(
  * 드롭 위치가 원래 위치와 같은지 확인합니다.
  */
 export function isSameDropPosition(
-  originalColumnId: string | null,
-  targetColumnId: string,
+  originalColumnId: number | null,
+  targetColumnId: number,
   originalIndex: number | null,
   targetIndex: number
 ): boolean {
@@ -114,10 +109,6 @@ export function isSameDropPosition(
 /**
  * 컬럼에서 특정 Job의 인덱스를 찾습니다.
  */
-export function findJobIndexInColumn(
-  column: Column,
-  jobId: number
-): number {
+export function findJobIndexInColumn(column: Column, jobId: number): number {
   return column.jobs.findIndex((job) => job.id === jobId);
 }
-

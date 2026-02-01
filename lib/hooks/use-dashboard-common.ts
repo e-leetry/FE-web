@@ -16,7 +16,7 @@ interface UseDashboardCommonOptions<T extends string = string> {
   onSseMetadata?: (
     jobId: number,
     metadata: NonNullable<ReturnType<typeof useJobSummarizeContext>["streamingData"]["metadata"]>,
-    firstColumnId: string
+    firstColumnId: number
   ) => void;
   /** SSE 완료 시 처리 */
   onSseComplete: (jobId: number) => void;
@@ -37,7 +37,7 @@ export function useDashboardCommon({
   const [isInputLoading, setIsInputLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [selectedColumnId, setSelectedColumnId] = useState<string | undefined>(undefined);
+  const [selectedColumnId, setSelectedColumnId] = useState<number | undefined>(undefined);
   const [mounted, setMounted] = useState(false);
   const [sseJobId, setSseJobId] = useState<number | null>(null);
 
@@ -82,7 +82,7 @@ export function useDashboardCommon({
         setSseJobId(jobId);
 
         // 첫 번째 컬럼 ID (관심공고)
-        const firstColumnId = columns[0]?.id || "interest";
+        const firstColumnId = columns[0]?.id || 1;
         setSelectedColumnId(firstColumnId);
 
         // 추가 처리 (비회원: 로컬스토리지에 Job 추가)

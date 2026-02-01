@@ -50,8 +50,8 @@ interface DashboardBoardProps {
   setIsModalOpen: (open: boolean) => void;
   selectedJob: Job | null;
   setSelectedJob: (job: Job | null) => void;
-  selectedColumnId: string | undefined;
-  setSelectedColumnId: (id: string | undefined) => void;
+  selectedColumnId: number | undefined;
+  setSelectedColumnId: (id: number | undefined) => void;
   // 로그인 여부에 따른 처리
   isLoggedIn: boolean;
   // 초기 모달 데이터
@@ -61,9 +61,9 @@ interface DashboardBoardProps {
   // 드래그 앤 드롭 핸들러
   onDragEnd: (
     activeId: number,
-    overColumnId: string,
+    overColumnId: number,
     currentCardIndex: number,
-    originalColumnId: string | null,
+    originalColumnId: number | null,
     originalIndex: number | null,
     currentColumns: Column[]
   ) => void;
@@ -79,7 +79,7 @@ function KanbanColumn({
   handleCardClick
 }: {
   column: Column;
-  handleCardClick: (job: Job, columnId: string) => void;
+  handleCardClick: (job: Job, columnId: number) => void;
 }) {
   const { setNodeRef } = useDroppable({
     id: column.id
@@ -89,7 +89,7 @@ function KanbanColumn({
     <div className="flex min-w-[180px] flex-1 flex-col gap-[16px]">
       <StatusHeader title={column.title} count={column.jobs.length} />
       <SortableContext
-        id={column.id}
+        id={String(column.id)}
         items={column.jobs.map((job) => job.id)}
         strategy={verticalListSortingStrategy}
       >
@@ -155,7 +155,7 @@ export function DashboardBoard({
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [activeJob, setActiveJob] = useState<Job | null>(null);
-  const [originalColumnId, setOriginalColumnId] = useState<string | null>(null);
+  const [originalColumnId, setOriginalColumnId] = useState<number | null>(null);
   const [originalIndex, setOriginalIndex] = useState<number | null>(null);
 
   const sensors = useSensors(
@@ -212,18 +212,20 @@ export function DashboardBoard({
     const dragActiveId = typeof rawActiveId === "number" ? rawActiveId : Number(rawActiveId);
     if (isNaN(dragActiveId)) return;
 
-    const overId = over.id;
+    const rawOverId = over.id;
+    const numericOverId = typeof rawOverId === "number" ? rawOverId : parseInt(String(rawOverId), 10);
+    if (isNaN(numericOverId)) return; // add 카드 같은 비정상 ID면 무시
 
     setLocalColumns((prev) => {
       const currentColumns = prev || columns;
 
       const activeColumn = findColumnByIdOrJob(currentColumns, dragActiveId);
-      const overColumn = findColumnByIdOrJob(currentColumns, overId);
+      const overColumn = findColumnByIdOrJob(currentColumns, numericOverId);
 
       if (!activeColumn || !overColumn) return prev;
 
       if (activeColumn.id === overColumn.id) {
-        return reorderJobsInColumn(currentColumns, activeColumn.id, dragActiveId, overId);
+        return reorderJobsInColumn(currentColumns, activeColumn.id, dragActiveId, numericOverId);
       }
 
       return moveJobBetweenColumns(
@@ -231,7 +233,7 @@ export function DashboardBoard({
         activeColumn.id,
         overColumn.id,
         dragActiveId,
-        overId
+        numericOverId
       );
     });
   };
@@ -268,8 +270,23 @@ export function DashboardBoard({
       return;
     }
 
+    if (!isLoggedIn) {
+      showToast({
+        variant: "error",
+        leftElement: "로그인한 사용자만 수정할 수 있어요"
+      });
+      cancelDrag();
+      return;
+    }
+
     const currentColumns = localColumns || columns;
-    const overColumn = findColumnByIdOrJob(currentColumns, over.id);
+    const rawOverId = over.id;
+    const numericOverId = typeof rawOverId === "number" ? rawOverId : parseInt(String(rawOverId), 10);
+    if (isNaN(numericOverId)) {
+      cancelDrag();
+      return;
+    }
+    const overColumn = findColumnByIdOrJob(currentColumns, numericOverId);
 
     if (!overColumn) {
       cancelDrag();
@@ -298,7 +315,7 @@ export function DashboardBoard({
     resetDragState();
   };
 
-  const handleCardClick = (job: Job, columnId: string) => {
+  const handleCardClick = (job: Job, columnId: number) => {
     if (job.type === "add" && !isLoggedIn) {
       showToast({
         variant: "error",
@@ -354,7 +371,7 @@ export function DashboardBoard({
       <CardDetailModal
         isOpen={isModalOpen}
         onClose={onCloseModal}
-        dashboardId={selectedColumnId ? Number(selectedColumnId) : undefined}
+        dashboardId={selectedColumnId}
         jobPostingId={selectedJob?.id && selectedJob.id > 0 ? selectedJob.id : undefined}
         initialData={initialModalData}
         sseData={sseData?.metadata ? sseData : undefined}

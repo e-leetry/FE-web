@@ -77,7 +77,7 @@ export default function GuestDashboardPage() {
         deadline?: string | null;
         originalUrl: string;
       },
-      firstColumnId: string
+      firstColumnId: number
     ) => {
       addLoadingJob(
         {
@@ -132,9 +132,9 @@ export default function GuestDashboardPage() {
   const handleDragEnd = useCallback(
     (
       activeId: number,
-      overColumnId: string,
+      overColumnId: number,
       currentCardIndex: number,
-      originalColumnId: string | null,
+      originalColumnId: number | null,
       originalIndex: number | null
     ) => {
       if (originalColumnId === overColumnId) {

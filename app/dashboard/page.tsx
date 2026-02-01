@@ -42,7 +42,7 @@ export default function DashboardPage() {
   const columns = useMemo<Column[]>(() => {
     if (dashboardsData && dashboardsData.length > 0) {
       return dashboardsData.map((dashboard) => ({
-        id: dashboard.id.toString(),
+        id: dashboard.id,
         title: dashboard.label,
         jobs: (dashboard.jobPostings || []).map((jp) => ({
           id: jp.id,
@@ -87,9 +87,9 @@ export default function DashboardPage() {
   const handleDragEnd = useCallback(
     (
       activeId: number,
-      overColumnId: string,
+      overColumnId: number,
       currentCardIndex: number,
-      _originalColumnId: string | null,
+      _originalColumnId: number | null,
       _originalIndex: number | null,
       currentColumns: Column[]
     ) => {
@@ -105,7 +105,7 @@ export default function DashboardPage() {
 
       queryClient.setQueryData(getGetDashboardsQueryKey(), () => {
         return currentColumns.map((col) => ({
-          id: Number(col.id),
+          id: col.id,
           label: col.title,
           jobPostings: col.jobs.map((job) => ({
             id: job.id,
@@ -119,7 +119,7 @@ export default function DashboardPage() {
       moveMutation.mutate({
         summaryId: activeId,
         data: {
-          dashboardId: Number(overColumnId),
+          dashboardId: overColumnId,
           prevItemId,
           nextItemId
         }

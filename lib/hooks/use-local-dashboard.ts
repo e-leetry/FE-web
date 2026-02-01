@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect, startTransition } from "react";
 const LOCAL_STORAGE_KEY = "reet_dashboard_data";
 
 interface StoredJob extends LocalJob {
-  columnId: string;
+  columnId: number;
 }
 
 export interface LocalJob {
@@ -24,17 +24,17 @@ export interface LocalJob {
 }
 
 export interface LocalColumn {
-  id: string;
+  id: number;
   title: string;
   jobs: LocalJob[];
 }
 
 export const INITIAL_LOCAL_COLUMNS: LocalColumn[] = [
-  { id: "interest", title: "관심공고", jobs: [] },
-  { id: "applied", title: "서류제출", jobs: [] },
-  { id: "interview1", title: "1차면접", jobs: [] },
-  { id: "interview2", title: "2차면접", jobs: [] },
-  { id: "final", title: "최종합격", jobs: [] }
+  { id: 1, title: "관심공고", jobs: [] },
+  { id: 2, title: "서류제출", jobs: [] },
+  { id: 3, title: "1차면접", jobs: [] },
+  { id: 4, title: "2차면접", jobs: [] },
+  { id: 5, title: "최종합격", jobs: [] }
 ];
 
 const buildColumnsWithSingle = (storedJob: StoredJob | null): LocalColumn[] =>
@@ -124,7 +124,7 @@ export function useLocalDashboard() {
 
   // Job 추가 (로딩 상태로)
   const addLoadingJob = useCallback(
-    (job: Omit<LocalJob, "type">, columnId: string = "interest") => {
+    (job: Omit<LocalJob, "type">, columnId: number = 1) => {
       setColumns(() => {
         const storedJob: StoredJob = { ...job, columnId, type: "loading" };
         const nextColumns = buildColumnsWithSingle(storedJob);
@@ -175,7 +175,7 @@ export function useLocalDashboard() {
 
   // Job 이동 (컬럼 간)
   const moveJob = useCallback(
-    (jobId: number, toColumnId: string, _toIndex?: number) => {
+    (jobId: number, toColumnId: number, _toIndex?: number) => {
       setColumns((prev) => {
         const current = extractStoredJob(prev);
         if (!current || current.id !== jobId) return prev;
@@ -191,7 +191,7 @@ export function useLocalDashboard() {
 
   // 컬럼 내 순서 변경
   const reorderJobs = useCallback(
-    (_columnId: string, _fromIndex: number, _toIndex: number) => {
+    (_columnId: number, _fromIndex: number, _toIndex: number) => {
       setColumns((prev) => {
         const current = extractStoredJob(prev);
         if (!current) return prev;

@@ -632,24 +632,15 @@ export const CardDetailModal = ({
 
   const handleSaveLocal = () => {
     if (isLoggedIn) return;
-    const targetJobId = effectiveJobId;
-    if (!onSaveToLocal || targetJobId === undefined) return;
 
-    const values = form.getValues();
-
-    onSaveToLocal({
-      id: targetJobId,
-      companyName: values.companyName,
-      title: values.jobTitle,
-      deadline: values.deadline,
-      url: values.jobUrl,
-      hireProcess: values.process,
-      mainTasks: values.mainTasks,
-      requirements: values.qualifications,
-      preferred: values.preferences
+    showToast({
+      variant: "error",
+      leftElement: "로그인한 사용자만 수정할 수 있어요"
     });
 
-    handleClose();
+    if (!onSaveToLocal) {
+      return;
+    }
   };
 
   const handleDelete = () => {
