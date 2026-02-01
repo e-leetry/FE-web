@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DimOverlay } from "@/components/ui/dim-overlay";
+import { buildLoginRedirect } from "@/lib/auth/routes";
 
 export default function StartPage() {
   const router = useRouter();
@@ -72,7 +73,7 @@ export default function StartPage() {
             </form>
 
             <Link
-              href="/login"
+              href={buildLoginRedirect("/dashboard")}
               className="text-[20px] font-semibold leading-[1.5] tracking-[-0.02em] text-[#FAFAFA]"
             >
               이미 가입했나요? <span className="underline">로그인</span>하면 바로 쓸 수 있어요

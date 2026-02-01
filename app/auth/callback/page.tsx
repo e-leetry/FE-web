@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { Route } from "next";
 import { useSync } from "@/lib/api/generated/guest/guest";
+import { LOGIN_REDIRECT_STORAGE_KEY } from "@/constants/storage";
 
 const LOCAL_STORAGE_KEY = "reet_dashboard_data";
 
@@ -23,11 +25,49 @@ export default function CallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const processedRef = useRef(false);
+  const redirectTargetRef = useRef<string | null>(null);
+
+  const getValidRedirect = useCallback((value?: string | null) => {
+    if (value && value.startsWith("/")) {
+      return value;
+    }
+    return "/dashboard";
+  }, []);
+
+  const resolveRedirectTarget = useCallback(() => {
+    if (redirectTargetRef.current) {
+      return redirectTargetRef.current;
+    }
+
+    const redirectFromParam = searchParams.get("redirectTo");
+    if (redirectFromParam) {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem(LOGIN_REDIRECT_STORAGE_KEY);
+      }
+      const normalized = getValidRedirect(redirectFromParam);
+      redirectTargetRef.current = normalized;
+      return normalized;
+    }
+
+    if (typeof window !== "undefined") {
+      const storedRedirect = sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY);
+      if (storedRedirect) {
+        sessionStorage.removeItem(LOGIN_REDIRECT_STORAGE_KEY);
+        const normalized = getValidRedirect(storedRedirect);
+        redirectTargetRef.current = normalized;
+        return normalized;
+      }
+    }
+
+    const fallback = getValidRedirect(null);
+    redirectTargetRef.current = fallback;
+    return fallback;
+  }, [getValidRedirect, searchParams]);
 
   const redirectToDestination = useCallback(() => {
-    const redirectTo = searchParams.get("redirectTo") || "/dashboard";
-    router.replace(redirectTo as "/dashboard");
-  }, [router, searchParams]);
+    const target = resolveRedirectTarget();
+    router.replace(target as Route);
+  }, [resolveRedirectTarget, router]);
 
   const syncMutation = useSync({
     mutation: {

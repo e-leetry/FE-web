@@ -13,6 +13,7 @@ import { useDashboardCommon } from "@/lib/hooks/use-dashboard-common";
 import { useJobSummarizeContext } from "@/lib/context/job-summarize-context";
 import { DashboardBoard, Column } from "@/components/features/dashboard/dashboard-board";
 import { showToast } from "@/store/ui/toast-store";
+import { buildLoginRedirect } from "@/lib/auth/routes";
 
 export default function GuestDashboardPage() {
   const router = useRouter();
@@ -165,12 +166,14 @@ export default function GuestDashboardPage() {
     return findLocalJob(selectedJob.id);
   }, [selectedJob, findLocalJob]);
 
+  const loginRedirectUrl = useMemo(() => buildLoginRedirect("/guest/dashboard"), []);
+
   const onButtonClick = () => {
     showToast({
       variant: "error",
       leftElement: "로그인한 사용자만 공고를 추가할 수 있어요"
     });
-    router.push("/login");
+    router.push(loginRedirectUrl);
     return false;
   };
 
@@ -200,6 +203,7 @@ export default function GuestDashboardPage() {
       onSaveToLocal={handleSaveToLocal}
       onDeleteLocal={handleDeleteLocal}
       onSaveButtonClick={onButtonClick}
+      loginRedirectPath="/guest/dashboard"
     />
   );
 }

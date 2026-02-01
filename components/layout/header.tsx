@@ -3,10 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback } from "react";
+import { usePathname } from "next/navigation";
 
 import { logout as logoutApi } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/useAuth";
 import { cn } from "@/lib/utils";
+import { buildLoginRedirect } from "@/lib/auth/routes";
 
 const HEADER_STYLES = {
   base: "flex h-[64px] w-full items-center justify-between px-[40px] py-[23px] z-50 transition-colors",
@@ -31,9 +33,12 @@ interface NavActionProps {
 }
 
 function LoginLink({ isDark, className }: NavActionProps) {
+  const pathname = usePathname();
+  const loginHref = buildLoginRedirect(pathname || "/dashboard");
+
   return (
     <Link
-      href="/login"
+      href={loginHref}
       className={cn(
         NAV_LINK_STYLES.base,
         isDark ? NAV_LINK_STYLES.dark : NAV_LINK_STYLES.light,

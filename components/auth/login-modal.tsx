@@ -4,13 +4,15 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { buildAuthorizeUrl } from "@/lib/auth/routes";
 import { DimOverlay } from "@/components/ui/dim-overlay";
+import { LOGIN_REDIRECT_STORAGE_KEY } from "@/constants/storage";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose?: () => void;
+  redirectTo?: string;
 }
 
-export function LoginModal({ isOpen, onClose }: LoginModalProps) {
+export function LoginModal({ isOpen, onClose, redirectTo = "/dashboard" }: LoginModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen && onClose) {
@@ -24,11 +26,23 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   if (!isOpen) return null;
 
+  const persistRedirectTarget = () => {
+    if (typeof window === "undefined") return;
+    if (!redirectTo) return;
+    try {
+      sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, redirectTo);
+    } catch (error) {
+      console.error("Failed to save login redirect target:", error);
+    }
+  };
+
   const handleGoogleLogin = () => {
+    persistRedirectTarget();
     window.location.href = buildAuthorizeUrl("google");
   };
 
   const handleKakaoLogin = () => {
+    persistRedirectTarget();
     window.location.href = buildAuthorizeUrl("kakao");
   };
 

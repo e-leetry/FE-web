@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
@@ -35,6 +35,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
+import { buildLoginRedirect } from "@/lib/auth/routes";
 
 export type { Job, Column } from "@/lib/utils/kanban-utils";
 
@@ -72,6 +73,7 @@ interface DashboardBoardProps {
   onSaveToLocal?: (jobData: LocalJob) => void;
   onDeleteLocal?: (jobId: number) => void;
   onSaveButtonClick?: () => void | boolean;
+  loginRedirectPath?: string;
 }
 
 function KanbanColumn({
@@ -139,7 +141,8 @@ export function DashboardBoard({
   onCloseModal,
   onSaveToLocal,
   onDeleteLocal,
-  onSaveButtonClick
+  onSaveButtonClick,
+  loginRedirectPath
 }: DashboardBoardProps) {
   const router = useRouter();
   const [localColumns, setLocalColumns] = useState<Column[] | null>(null);
@@ -157,6 +160,10 @@ export function DashboardBoard({
   const [activeJob, setActiveJob] = useState<Job | null>(null);
   const [originalColumnId, setOriginalColumnId] = useState<number | null>(null);
   const [originalIndex, setOriginalIndex] = useState<number | null>(null);
+  const loginRedirectUrl = useMemo(
+    () => buildLoginRedirect(loginRedirectPath ?? "/dashboard"),
+    [loginRedirectPath]
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -275,6 +282,7 @@ export function DashboardBoard({
         variant: "error",
         leftElement: "로그인한 사용자만 수정할 수 있어요"
       });
+      router.push(loginRedirectUrl);
       cancelDrag();
       return;
     }
@@ -321,7 +329,7 @@ export function DashboardBoard({
         variant: "error",
         leftElement: "로그인한 사용자만 공고를 추가할 수 있어요"
       });
-      router.push("/login");
+      router.push(loginRedirectUrl);
       return;
     }
     setSelectedJob(job);
