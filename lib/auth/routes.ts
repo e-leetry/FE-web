@@ -1,3 +1,5 @@
+import type { Route } from "next";
+
 export const LOGIN_PATH = "/login";
 export const AUTH_CALLBACK_PREFIX = "/auth/callback";
 export const COMPONENTS = "/components";
@@ -45,8 +47,8 @@ export function buildCallbackPath(provider: OAuthProvider) {
   return `${AUTH_CALLBACK_PREFIX}/${provider}`;
 }
 
-export function buildLoginRedirect(pathname: string) {
+export function buildLoginRedirect(pathname: string): Route {
   const redirect = new URL(LOGIN_PATH, "http://localhost");
   redirect.searchParams.set("redirectTo", pathname);
-  return `${LOGIN_PATH}?${redirect.searchParams.toString()}`;
+  return `${LOGIN_PATH}?${redirect.searchParams.toString()}` as Route;
 }

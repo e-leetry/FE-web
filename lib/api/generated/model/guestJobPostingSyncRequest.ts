@@ -19,4 +19,6 @@ export interface GuestJobPostingSyncRequest {
   requirements?: string;
   /** 우대 사항 */
   preferred?: string;
+  /** 메모 */
+  memo?: string;
 }

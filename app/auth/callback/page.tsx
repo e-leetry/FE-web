@@ -25,11 +25,11 @@ export default function CallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const processedRef = useRef(false);
-  const redirectTargetRef = useRef<string | null>(null);
+  const redirectTargetRef = useRef<Route | null>(null);
 
-  const getValidRedirect = useCallback((value?: string | null) => {
+  const getValidRedirect = useCallback((value?: string | null): Route => {
     if (value && value.startsWith("/")) {
-      return value;
+      return value as Route;
     }
     return "/dashboard";
   }, []);
@@ -66,7 +66,7 @@ export default function CallbackPage() {
 
   const redirectToDestination = useCallback(() => {
     const target = resolveRedirectTarget();
-    router.replace(target as Route);
+    router.replace(target);
   }, [resolveRedirectTarget, router]);
 
   const syncMutation = useSync({

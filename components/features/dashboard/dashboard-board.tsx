@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { StatusHeader } from "@/components/dashboard/status-header";
 import { JobCard } from "@/components/dashboard/job-card";
 import { CardDetailModal } from "@/components/common/card-detail-modal";
@@ -73,7 +74,7 @@ interface DashboardBoardProps {
   onSaveToLocal?: (jobData: LocalJob) => void;
   onDeleteLocal?: (jobId: number) => void;
   onSaveButtonClick?: () => void | boolean;
-  loginRedirectPath?: string;
+  loginRedirectPath?: Route;
 }
 
 function KanbanColumn({
