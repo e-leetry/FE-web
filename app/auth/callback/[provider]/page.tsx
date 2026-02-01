@@ -1,32 +1,92 @@
-import type { Metadata } from "next";
+"use client";
 
-import type { OAuthProvider } from "@/lib/auth/routes";
+import { useEffect, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSync } from "@/lib/api/generated/guest/guest";
 
-type CallbackPageProps = {
-  params: { provider: OAuthProvider };
-  searchParams: Record<string, string | string[] | undefined>;
-};
+const LOCAL_STORAGE_KEY = "reet_dashboard_data";
 
-export function generateMetadata({ params }: CallbackPageProps): Metadata {
-  return {
-    title: `Callback · ${params.provider}`
-  };
+interface StoredJob {
+  id: number;
+  companyName: string;
+  title?: string;
+  deadline?: string;
+  url?: string;
+  hireProcess?: string;
+  mainTasks?: string;
+  requirements?: string;
+  preferred?: string;
+  columnId: number;
 }
 
-export default function CallbackPage({ params, searchParams }: CallbackPageProps) {
+export default function CallbackPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const processedRef = useRef(false);
+
+  const redirectToDestination = useCallback(() => {
+    const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+    router.replace(redirectTo as "/dashboard");
+  }, [router, searchParams]);
+
+  const syncMutation = useSync({
+    mutation: {
+      onSuccess: () => {
+        // 동기화 성공 시 로컬스토리지 정리
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        redirectToDestination();
+      },
+      onError: (error) => {
+        console.error("게스트 데이터 동기화 실패:", error);
+        // 실패해도 리다이렉트는 진행
+        redirectToDestination();
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (processedRef.current) return;
+    processedRef.current = true;
+
+    // 로컬스토리지에서 게스트 데이터 확인
+    const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData) as StoredJob;
+
+        // 필수 필드 확인
+        if (parsed.companyName && parsed.title) {
+          syncMutation.mutate({
+            data: {
+              companyName: parsed.companyName,
+              title: parsed.title,
+              deadline: parsed.deadline,
+              url: parsed.url,
+              hireProcess: parsed.hireProcess,
+              mainTasks: parsed.mainTasks,
+              requirements: parsed.requirements,
+              preferred: parsed.preferred
+            }
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("로컬스토리지 파싱 실패:", error);
+      }
+    }
+
+    // 게스트 데이터가 없거나 파싱 실패 시 바로 리다이렉트
+    redirectToDestination();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-16 text-slate-100">
-      <h1 className="text-3xl font-semibold text-slate-50">OAuth callback</h1>
-      <p className="text-base text-slate-300">
-        Provider: <strong className="font-semibold text-slate-100">{params.provider}</strong>
-      </p>
-      <p className="text-sm text-slate-400">
-        This route should receive the backend redirect once the OAuth provider sends temporary auth code/state. Hand the
-        query params back to the backend over the fetcher.
-      </p>
-      <pre className="rounded-lg border border-slate-800 bg-slate-950/60 overflow-x-auto px-4 py-4 text-sm text-slate-200 shadow-sm">
-        {JSON.stringify(searchParams, null, 2)}
-      </pre>
-    </section>
+    <div className="flex min-h-screen items-center justify-center bg-[#F6F7F9]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500" />
+        <p className="text-sm text-gray-500">로그인 처리 중...</p>
+      </div>
+    </div>
   );
 }

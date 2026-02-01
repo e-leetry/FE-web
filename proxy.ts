@@ -37,13 +37,16 @@ async function checkIsAdmin(cookieHeader: string): Promise<boolean> {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const sessionCookieName = getSessionCookieName();
+  const cookieValue = request.cookies.get(sessionCookieName)?.value;
+
+  if (pathname === "/onboarding" && isLoggedInFromCookie(cookieValue)) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
 
   if (isPublicRoute(pathname)) {
     return NextResponse.next();
   }
-
-  const sessionCookieName = getSessionCookieName();
-  const cookieValue = request.cookies.get(sessionCookieName)?.value;
 
   if (!isLoggedInFromCookie(cookieValue)) {
     if (pathname === "/dashboard") {

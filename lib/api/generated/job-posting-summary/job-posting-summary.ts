@@ -98,6 +98,68 @@ export const useCreate = <TError = ErrorType<unknown>,
       return useMutation(getCreateMutationOptions(options), queryClient);
     }
     /**
+ * 삭제 예약된 채용 공고 요약을 복구합니다.
+ * @summary 채용 공고 요약 삭제 취소
+ */
+export const undo = (
+    id: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ApiResponseUnit>(
+      {url: `/api/v1/job-posting-summaries/${id}/undo`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getUndoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undo>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof undo>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['undo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof undo>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  undo(id,requestOptions)
+        }
+
+
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UndoMutationResult = NonNullable<Awaited<ReturnType<typeof undo>>>
+    
+    export type UndoMutationError = ErrorType<unknown>
+
+    /**
+ * @summary 채용 공고 요약 삭제 취소
+ */
+export const useUndo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof undo>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof undo>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getUndoMutationOptions(options), queryClient);
+    }
+    /**
  * 채용 공고 요약의 대시보드 위치나 순서를 변경합니다.
  * @summary 채용 공고 요약 이동
  */
@@ -263,7 +325,7 @@ export const _delete = (
 ) => {
       
       
-      return customInstance<ApiResponseUnit>(
+      return customInstance<string>(
       {url: `/api/v1/job-posting-summaries/${id}`, method: 'DELETE', signal
     },
       options);
