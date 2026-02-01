@@ -295,8 +295,6 @@ export const CardDetailModal = ({
 
   const isSummarizing = internalSseData.isStreaming;
 
-  const isEdit = !!jobPostingId;
-
   const form = useForm<CardDetailValues>({
     resolver: zodResolver(cardDetailSchema),
     defaultValues: {
@@ -313,6 +311,8 @@ export const CardDetailModal = ({
   });
 
   const companyName = useWatch({ control: form.control, name: "companyName" });
+  const isGuestEditMode = !isLoggedIn && Boolean(initialData) && !sseData;
+  const isEdit = isLoggedIn ? !!jobPostingId : isGuestEditMode;
 
   const effectiveJobId = jobPostingId ?? initialData?.id ?? sseData?.metadata?.jobId;
 
@@ -631,16 +631,14 @@ export const CardDetailModal = ({
   };
 
   const handleSaveLocal = () => {
-    if (isLoggedIn) return;
+    if (isLoggedIn) {
+      return;
+    }
 
     showToast({
       variant: "error",
       leftElement: "로그인한 사용자만 수정할 수 있어요"
     });
-
-    if (!onSaveToLocal) {
-      return;
-    }
   };
 
   const handleDelete = () => {
@@ -701,7 +699,7 @@ export const CardDetailModal = ({
     showDelete: isEdit,
     onDelete: handleDelete,
     isDeletePending: isDeleting,
-    onSave: !isLoggedIn ? handleSaveLocal : undefined
+    onSave: !isLoggedIn && isGuestEditMode ? handleSaveLocal : undefined
   };
 
   const defaultFooter = <CardDetailFooter {...footerProps} />;
