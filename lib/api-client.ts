@@ -1,4 +1,5 @@
 import { ApiResponse, ApiClientError, RequestOptions } from "./types/api";
+import { CancelledError } from "@tanstack/react-query";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 const DEFAULT_TIMEOUT = 10 * 1000;
@@ -55,11 +56,32 @@ const apiFetch = async <T>(
   // AbortController로 타임아웃 처리
   const controller = new AbortController();
   const isStream = parseAs === "stream";
-  const timeoutId = isStream ? undefined : setTimeout(() => controller.abort(), timeout);
+  let didTimeout = false;
+  const timeoutId =
+    isStream || timeout === Infinity
+      ? undefined
+      : setTimeout(() => {
+          didTimeout = true;
+          controller.abort();
+        }, timeout);
 
   // 외부에서 전달된 signal과 내부 타임아웃 signal 결합
   if (options?.signal) {
-    options.signal.addEventListener('abort', () => controller.abort());
+    if (options.signal.aborted) {
+      controller.abort(options.signal.reason);
+    } else {
+      const handleAbort = () => {
+        controller.abort(options.signal?.reason);
+      };
+      options.signal.addEventListener("abort", handleAbort, { once: true });
+      controller.signal.addEventListener(
+        "abort",
+        () => {
+          options.signal?.removeEventListener("abort", handleAbort);
+        },
+        { once: true }
+      );
+    }
   }
 
   // FormData인 경우 Content-Type 헤더 설정하지 않음 (브라우저가 자동 설정)
@@ -147,6 +169,9 @@ const apiFetch = async <T>(
   } catch (error) {
     // 타임아웃 에러
     if (error instanceof Error && error.name === "AbortError") {
+      if (!didTimeout) {
+        throw new CancelledError();
+      }
       const timeoutError = new ApiClientError(408, "TIMEOUT", "요청 시간이 초과되었습니다.");
       logError(method, endpoint, timeoutError);
       throw timeoutError;

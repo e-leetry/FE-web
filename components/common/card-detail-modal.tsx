@@ -20,10 +20,12 @@ import {
   useGetById,
   useDelete,
   useRename,
+  useUndo,
   getGetByIdQueryKey
 } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
 import { getGetDashboardsQueryKey } from "@/lib/api/generated/dashboard/dashboard";
 import {
+  DashboardResponse,
   JobPostingSummaryCreateRequestPlatform,
   JobPostingSummaryUpdateRequestPlatform
 } from "@/lib/api/generated/model";
@@ -326,6 +328,7 @@ export const CardDetailModal = ({
   const { mutate: updateSummary, isPending: isUpdating } = useUpdate();
   const { mutate: deleteSummary, isPending: isDeleting } = useDelete();
   const { mutate: renameSummary, isPending: isRenaming } = useRename();
+  const { mutate: undoSummary } = useUndo();
 
   const { data: jobPostingData, isLoading: isFetching } = useGetById(jobPostingId as number, {
     query: {
@@ -771,15 +774,71 @@ export const CardDetailModal = ({
     });
   };
 
+  const removeJobFromDashboardCache = (jobId: number) => {
+    queryClient.setQueryData<DashboardResponse[] | undefined>(
+      getGetDashboardsQueryKey(),
+      (previous) => {
+        if (!previous) {
+          return previous;
+        }
+
+        let hasChanges = false;
+        const nextDashboards = previous.map((dashboard) => {
+          const filteredJobs = dashboard.jobPostings.filter((job) => job.id !== jobId);
+          if (filteredJobs.length !== dashboard.jobPostings.length) {
+            hasChanges = true;
+            return {
+              ...dashboard,
+              jobPostings: filteredJobs
+            };
+          }
+          return dashboard;
+        });
+
+        return hasChanges ? nextDashboards : previous;
+      }
+    );
+  };
+
+  const handleUndoDelete = (jobId: number) => {
+    if (jobId === undefined || Number.isNaN(jobId)) {
+      return;
+    }
+
+    undoSummary(
+      { id: jobId },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
+          showToast({
+            leftElement: "삭제를 취소했어요"
+          });
+        },
+        onError: (error) => {
+          console.error("채용 공고 요약 삭제 취소 실패:", error);
+        }
+      }
+    );
+  };
+
+  const showDeleteToast = (jobId?: number) =>
+    showToast({
+      leftElement: "공고를 삭제했어요",
+      rightElement:
+        jobId !== undefined ? (
+          <button
+            type="button"
+            className="text-sm font-semibold text-[#BFD2FF] hover:text-white focus-visible:outline-none"
+            onClick={() => handleUndoDelete(jobId)}
+          >
+            취소하기
+          </button>
+        ) : undefined
+    });
+
   const handleDelete = () => {
     const targetJobId = effectiveJobId;
     if (targetJobId === undefined) return;
-
-    const showDeleteToast = () =>
-      showToast({
-        leftElement: "공고를 삭제했어요",
-        rightElement: "취소하기"
-      });
 
     if (!isLoggedIn) {
       if (onDeleteLocal) {
@@ -794,8 +853,9 @@ export const CardDetailModal = ({
       { id: targetJobId },
       {
         onSuccess: () => {
+          removeJobFromDashboardCache(targetJobId);
           queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
-          showDeleteToast();
+          showDeleteToast(targetJobId);
           handleClose();
         },
         onError: (error) => {

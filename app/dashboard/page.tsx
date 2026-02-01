@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/lib/auth/useAuth";
 import {
   useGetDashboards,
@@ -16,10 +15,15 @@ export default function DashboardPage() {
   const { isLoggedIn } = useAuth();
   const queryClient = useQueryClient();
 
+  const visibilityStateRef = useRef<DocumentVisibilityState | null>(null);
+  const hasTrackedVisibilityRef = useRef(false);
+  const hasFetchedOnceRef = useRef(false);
+
   const { data: dashboardsData } = useGetDashboards({
     query: {
       enabled: isLoggedIn,
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
       staleTime: 0
     }
   });
@@ -63,6 +67,50 @@ export default function DashboardPage() {
   const handleSseComplete = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
   }, [queryClient]);
+
+  useEffect(() => {
+    if (dashboardsData) {
+      hasFetchedOnceRef.current = true;
+    }
+  }, [dashboardsData]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+
+    visibilityStateRef.current = document.visibilityState;
+
+    const handleVisibilityOrFocus = () => {
+      if (!isLoggedIn) return;
+      if (typeof document === "undefined") return;
+
+      if (!hasTrackedVisibilityRef.current) {
+        hasTrackedVisibilityRef.current = true;
+        visibilityStateRef.current = document.visibilityState;
+        return;
+      }
+
+      const previousState = visibilityStateRef.current;
+      const currentState = document.visibilityState;
+      visibilityStateRef.current = currentState;
+
+      if (
+        currentState === "visible" &&
+        previousState === "hidden" &&
+        hasFetchedOnceRef.current
+      ) {
+        queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+    };
+  }, [isLoggedIn, queryClient]);
 
   // 공통 훅 사용
   const {
