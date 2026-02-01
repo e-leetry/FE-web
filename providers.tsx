@@ -1,10 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
 
 import { getQueryClient } from "@/lib/query/queryClient";
-import { ToastContainer } from "@/components/ui/toast-container";
+
+const ToastContainer = dynamic(
+  () => import("@/components/ui/toast-container").then((mod) => mod.ToastContainer),
+  { ssr: false }
+);
 
 type ProvidersProps = {
   children: ReactNode;
