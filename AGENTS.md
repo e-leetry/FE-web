@@ -1,6 +1,9 @@
 ````md
 # 프론트엔드 프로젝트 개발 가이드
 
+## 0. agent 
+- 반드시 한국어로만 대답한다.
+
 ## 1. 프로젝트 개요
 - **프레임워크**: Next.js 16 (App Router)
 - **언어**: TypeScript (strict mode)

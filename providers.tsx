@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
 
+import { AmplitudeProvider } from "@/components/shared/amplitude-provider";
 import { getQueryClient } from "@/lib/query/queryClient";
 
 const ToastContainer = dynamic(
@@ -11,9 +12,9 @@ const ToastContainer = dynamic(
   { ssr: false }
 );
 
-type ProvidersProps = {
+interface ProvidersProps {
   children: ReactNode;
-};
+}
 
 export default function Providers({ children }: ProvidersProps) {
   // React Query should only hold server state; mutate UI state with Zustand or other client stores.
@@ -21,7 +22,7 @@ export default function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <AmplitudeProvider>{children}</AmplitudeProvider>
       <ToastContainer />
     </QueryClientProvider>
   );
