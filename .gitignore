@@ -40,3 +40,4 @@ next-env.d.ts
 .output.txt
 be
 .mcp.json
+.env.local
