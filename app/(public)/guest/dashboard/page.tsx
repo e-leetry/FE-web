@@ -31,6 +31,7 @@ export default function GuestDashboardPage() {
   const {
     columns: localStorageColumns,
     isLoaded: isLocalLoaded,
+    addJob,
     addLoadingJob,
     updateJob: updateLocalJob,
     moveJob: moveLocalJob,
@@ -107,6 +108,23 @@ export default function GuestDashboardPage() {
     [updateLocalJob, streamingData]
   );
 
+  // SSE 실패 시 기본 카드 생성
+  const handleSseError = useCallback(
+    (failedUrl: string | null) => {
+      const firstColumnId = localStorageColumns[0]?.id || 1;
+      addJob(
+        {
+          id: Date.now(),
+          companyName: "새회사",
+          title: "새공고",
+          url: failedUrl || undefined
+        },
+        firstColumnId
+      );
+    },
+    [addJob, localStorageColumns]
+  );
+
   // 공통 훅 사용
   const {
     mounted,
@@ -126,7 +144,8 @@ export default function GuestDashboardPage() {
     currentPath: "/guest/dashboard" as Route<"/guest/dashboard">,
     columns,
     onSseMetadata: handleSseMetadata,
-    onSseComplete: handleSseComplete
+    onSseComplete: handleSseComplete,
+    onSseError: handleSseError
   });
 
   // 드래그 앤 드롭 완료 핸들러

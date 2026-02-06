@@ -20,13 +20,16 @@ interface UseDashboardCommonOptions<T extends string = string> {
   ) => void;
   /** SSE 완료 시 처리 */
   onSseComplete: (jobId: number) => void;
+  /** SSE 에러 시 처리 */
+  onSseError?: (failedUrl: string | null) => void;
 }
 
 export function useDashboardCommon({
   currentPath,
   columns,
   onSseMetadata,
-  onSseComplete
+  onSseComplete,
+  onSseError
 }: UseDashboardCommonOptions) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,6 +46,8 @@ export function useDashboardCommon({
 
   // 온보딩에서 넘어온 URL 처리 여부 추적
   const jobUrlProcessedRef = useRef(false);
+  const lastRequestedUrlRef = useRef<string | null>(null);
+  const sseErrorHandledRef = useRef(false);
 
   // 마운트 처리
   useEffect(() => {
@@ -59,6 +64,9 @@ export function useDashboardCommon({
     const jobUrl = searchParams.get("jobUrl");
     if (jobUrl) {
       jobUrlProcessedRef.current = true;
+      const decodedUrl = decodeURIComponent(jobUrl);
+      lastRequestedUrlRef.current = decodedUrl;
+      sseErrorHandledRef.current = false;
 
       // URL 쿼리 파라미터 제거
       router.replace(currentPath, { scroll: false });
@@ -67,7 +75,7 @@ export function useDashboardCommon({
       startTransition(() => {
         setIsInputLoading(true);
       });
-      startSummarize(decodeURIComponent(jobUrl));
+      startSummarize(decodedUrl);
     }
   }, [mounted, searchParams, router, startSummarize, currentPath]);
 
@@ -120,6 +128,10 @@ export function useDashboardCommon({
       startTransition(() => {
         setIsInputLoading(false);
       });
+      if (!sseErrorHandledRef.current && !streamingData.metadata) {
+        sseErrorHandledRef.current = true;
+        onSseError?.(lastRequestedUrlRef.current);
+      }
       showToast({
         variant: "error",
         leftElement: "공고를 요약하지 못했어요",
@@ -132,6 +144,8 @@ export function useDashboardCommon({
   // 공통 핸들러
   const handleSseSubmit = useCallback(
     (url: string) => {
+      lastRequestedUrlRef.current = url;
+      sseErrorHandledRef.current = false;
       setIsInputLoading(true);
       startSummarize(url);
     },

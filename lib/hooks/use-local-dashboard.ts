@@ -135,6 +135,19 @@ export function useLocalDashboard() {
     [saveToStorage]
   );
 
+  // Job 추가 (기본 상태)
+  const addJob = useCallback(
+    (job: Omit<LocalJob, "type"> & { type?: "default" | "loading" }, columnId: number = 1) => {
+      setColumns(() => {
+        const storedJob: StoredJob = { ...job, columnId, type: job.type ?? "default" };
+        const nextColumns = buildColumnsWithSingle(storedJob);
+        saveToStorage(storedJob);
+        return nextColumns;
+      });
+    },
+    [saveToStorage]
+  );
+
   // Job 업데이트 (로딩 완료 후 데이터 채우기)
   const updateJob = useCallback(
     (jobId: number, updates: Partial<LocalJob>) => {
@@ -227,6 +240,7 @@ export function useLocalDashboard() {
   return {
     columns,
     isLoaded,
+    addJob,
     addLoadingJob,
     updateJob,
     removeJob,
