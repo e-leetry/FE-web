@@ -21,8 +21,8 @@ export type ShowToastOptions = Omit<ToastPayload, "id">;
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   addToast: (toast) =>
-    set((state) => ({
-      toasts: [...state.toasts, toast]
+    set(() => ({
+      toasts: [toast]
     })),
   removeToast: (id) =>
     set((state) => ({
