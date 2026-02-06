@@ -89,13 +89,13 @@ const RecruitmentInfoForm = ({
 
   const handleInlineChange =
     (name: "companyName" | "jobTitle") =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       setValue(name, event.target.value, { shouldDirty: true });
     };
 
   const handleInlineBlur =
     (name: "companyName" | "jobTitle") =>
-    (event: React.FocusEvent<HTMLInputElement>) => {
+    (event: React.FocusEvent<HTMLTextAreaElement>) => {
       setValue(name, event.target.value.trim(), { shouldDirty: true });
     };
 
