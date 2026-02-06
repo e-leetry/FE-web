@@ -30,7 +30,8 @@ export const FormTextArea = <
   textareaClassName,
   rows = 1,
   autoResize = false,
-  disabled
+  disabled,
+  isRequired
 }: FormTextAreaProps<TFieldValues, TName>) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -57,7 +58,10 @@ export const FormTextArea = <
       name={name}
       render={({ field }) => (
         <FormItem className={cn("space-y-0", className)}>
-          <FormLabel className={labelClassName}>{label}</FormLabel>
+          <FormLabel className={labelClassName}>
+            {label}
+            {isRequired && <span className="ml-1 text-[#FF3B30]">*</span>}
+          </FormLabel>
           <FormControl>
             <textarea
               {...field}

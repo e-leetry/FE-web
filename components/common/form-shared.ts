@@ -19,4 +19,5 @@ export interface BaseFormFieldProps<
   placeholder?: string;
   className?: string;
   labelClassName?: string;
+  isRequired?: boolean;
 }

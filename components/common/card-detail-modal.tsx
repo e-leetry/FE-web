@@ -19,9 +19,7 @@ import {
   useUpdate,
   useGetById,
   useDelete,
-  useRename,
-  useUndo,
-  getGetByIdQueryKey
+  useUndo
 } from "@/lib/api/generated/job-posting-summary/job-posting-summary";
 import { getGetDashboardsQueryKey } from "@/lib/api/generated/dashboard/dashboard";
 import {
@@ -54,14 +52,9 @@ interface RecruitmentInfoFormProps {
   setValue: UseFormSetValue<CardDetailValues>;
   labelClass: string;
   isEdit?: boolean;
-  isNameEditMode?: boolean;
   onSummarize?: () => void;
   isSummarizing?: boolean;
   disabled?: boolean;
-  onStartNameEdit?: () => void;
-  onCancelNameEdit?: () => void;
-  onConfirmNameEdit?: () => void | Promise<void>;
-  isRenaming?: boolean;
 }
 
 const RecruitmentInfoForm = ({
@@ -69,39 +62,26 @@ const RecruitmentInfoForm = ({
   setValue,
   labelClass,
   isEdit = false,
-  isNameEditMode = false,
   onSummarize,
   isSummarizing,
-  disabled = false,
-  onStartNameEdit,
-  onCancelNameEdit,
-  onConfirmNameEdit,
-  isRenaming = false
+  disabled = false
 }: RecruitmentInfoFormProps) => {
   const companyName = useWatch({ control, name: "companyName" });
   const jobTitle = useWatch({ control, name: "jobTitle" });
 
   return (
     <div className="flex flex-col gap-6">
-      {isEdit && !isNameEditMode ? (
+      {isEdit ? (
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-4">
             <span className="text-[28px] font-semibold text-[#343e4c]">
               {companyName || "기업명"}
             </span>
             <div className="w-[2px] h-4 bg-[#eee]" />
-            <span className="text-[28px] font-normal text-[#343e4c]">{jobTitle || "직무명"}</span>
+            <span className="text-[28px] font-normal text-[#343e4c]">
+              {jobTitle || "직무명"}
+            </span>
           </div>
-          <button
-            type="button"
-            className="p-3 bg-[#eee] rounded-[6px] shrink-0 disabled:opacity-50"
-            onClick={onStartNameEdit}
-            disabled={disabled || !onStartNameEdit}
-          >
-            <div className="relative w-3 h-3">
-              <Image src="/images/icon/ico_write_on.svg" alt="edit" fill />
-            </div>
-          </button>
         </div>
       ) : (
         <div className={cn("flex items-center gap-3", isEdit ? "mb-4" : "")}>
@@ -109,46 +89,24 @@ const RecruitmentInfoForm = ({
             <FormInput
               control={control}
               name="companyName"
-              label=""
-              className="flex-1 [&>label]:hidden"
-              labelClassName="hidden"
+              label="기업명"
+              className="flex-1"
+              labelClassName={labelClass}
+              isRequired
               placeholder="기업명을 입력해요"
-              disabled={disabled || isRenaming}
+              disabled={disabled}
             />
             <FormInput
               control={control}
               name="jobTitle"
-              label=""
-              className="flex-1 [&>label]:hidden"
-              labelClassName="hidden"
+              label="직무명"
+              className="flex-1"
+              labelClassName={labelClass}
+              isRequired
               placeholder="지원하는 직무를 입력해요"
-              disabled={disabled || isRenaming}
+              disabled={disabled}
             />
           </div>
-          {isEdit && (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outlined"
-                size="md"
-                className="rounded-[10px] px-5"
-                onClick={onCancelNameEdit}
-                disabled={isRenaming}
-              >
-                취소
-              </Button>
-              <Button
-                type="button"
-                size="md"
-                className="rounded-[10px] px-5"
-                onClick={onConfirmNameEdit}
-                disabled={disabled || isRenaming}
-                isLoading={isRenaming}
-              >
-                수정하기
-              </Button>
-            </div>
-          )}
         </div>
       )}
 
@@ -320,14 +278,9 @@ export const CardDetailModal = ({
 }: CardDetailModalProps) => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"info" | "memo">("info");
-  const [isNameEditMode, setIsNameEditMode] = useState(false);
-  const [nameSnapshot, setNameSnapshot] = useState<{ companyName: string; jobTitle: string } | null>(
-    null
-  );
   const { mutate: createSummary, isPending: isCreating } = useCreate();
   const { mutate: updateSummary, isPending: isUpdating } = useUpdate();
   const { mutate: deleteSummary, isPending: isDeleting } = useDelete();
-  const { mutate: renameSummary, isPending: isRenaming } = useRename();
   const { mutate: undoSummary } = useUndo();
 
   const { data: jobPostingData, isLoading: isFetching } = useGetById(jobPostingId as number, {
@@ -366,88 +319,6 @@ export const CardDetailModal = ({
   const isEdit = isLoggedIn ? !!jobPostingId : isGuestEditMode;
 
   const effectiveJobId = jobPostingId ?? initialData?.id ?? sseData?.metadata?.jobId;
-  const finalizeNameEdit = () => {
-    setIsNameEditMode(false);
-    setNameSnapshot(null);
-  };
-
-  const handleStartNameEdit = () => {
-    if (!isEdit || isNameEditMode) {
-      return;
-    }
-
-    setNameSnapshot({
-      companyName: form.getValues("companyName"),
-      jobTitle: form.getValues("jobTitle")
-    });
-    setIsNameEditMode(true);
-  };
-
-  const handleCancelNameEdit = () => {
-    const snapshot = nameSnapshot;
-    if (snapshot) {
-      form.setValue("companyName", snapshot.companyName, { shouldDirty: false });
-      form.setValue("jobTitle", snapshot.jobTitle, { shouldDirty: false });
-    }
-    finalizeNameEdit();
-  };
-
-  const handleConfirmNameEdit = async () => {
-    if (!isNameEditMode || isRenaming) {
-      return;
-    }
-
-    const isValid = await form.trigger(["companyName", "jobTitle"]);
-    if (!isValid) {
-      return;
-    }
-
-    if (!isLoggedIn || !jobPostingId) {
-      finalizeNameEdit();
-      return;
-    }
-
-    const companyNameValue = form.getValues("companyName");
-    const jobTitleValue = form.getValues("jobTitle");
-
-    renameSummary(
-      {
-        id: jobPostingId,
-        data: {
-          companyName: companyNameValue,
-          title: jobTitleValue
-        }
-      },
-      {
-        onSuccess: () => {
-          const detailQueryKey = getGetByIdQueryKey(jobPostingId);
-          queryClient.setQueryData(detailQueryKey, (prev) =>
-            prev
-              ? {
-                  ...prev,
-                  companyName: companyNameValue,
-                  title: jobTitleValue
-                }
-              : prev
-          );
-          queryClient.invalidateQueries({ queryKey: detailQueryKey });
-          queryClient.invalidateQueries({ queryKey: getGetDashboardsQueryKey() });
-          showToast({
-            leftElement: "회사명과 공고명을 수정했어요"
-          });
-          finalizeNameEdit();
-        },
-        onError: (error) => {
-          console.error("채용 공고 요약 기본 정보 수정 실패:", error);
-          showToast({
-            variant: "error",
-            leftElement: "회사명과 공고명을 수정하지 못했어요"
-          });
-        }
-      }
-    );
-  };
-
   const handleSummarize = () => {
     const jobUrl = form.getValues("jobUrl");
     if (!jobUrl) return;
@@ -759,7 +630,6 @@ export const CardDetailModal = ({
 
   const handleClose = () => {
     form.reset();
-    finalizeNameEdit();
     onClose();
   };
 
@@ -869,7 +739,7 @@ export const CardDetailModal = ({
 
   const labelClass = "text-[16px] font-bold text-[#727272] mb-[12px] block";
 
-  const isPending = isCreating || isUpdating || isFetching || isSseStreaming || isDeleting || isRenaming;
+  const isPending = isCreating || isUpdating || isFetching || isSseStreaming || isDeleting;
 
   const navItemBaseClass =
     "flex flex-col items-center justify-center w-[72px] h-[72px] rounded-[12px] cursor-pointer transition-colors gap-1";
@@ -957,14 +827,9 @@ export const CardDetailModal = ({
               setValue={form.setValue}
               labelClass={labelClass}
               isEdit={isEdit}
-              isNameEditMode={isNameEditMode}
               onSummarize={handleSummarize}
               isSummarizing={isSummarizing}
               disabled={isFormDisabled}
-              onStartNameEdit={handleStartNameEdit}
-              onCancelNameEdit={handleCancelNameEdit}
-              onConfirmNameEdit={handleConfirmNameEdit}
-              isRenaming={isRenaming}
             />
           ) : (
             <>

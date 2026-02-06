@@ -36,7 +36,8 @@ export const FormInput = <
   rightElement,
   rightElementClassName,
   rightPaddingClassName,
-  disabled
+  disabled,
+  isRequired
 }: FormInputProps<TFieldValues, TName>) => {
   return (
     <FormField
@@ -44,7 +45,10 @@ export const FormInput = <
       name={name}
       render={({ field }) => (
         <FormItem className={cn("space-y-0", className)}>
-          <FormLabel className={labelClassName}>{label}</FormLabel>
+          <FormLabel className={labelClassName}>
+            {label}
+            {isRequired && <span className="ml-1 text-[#FF3B30]">*</span>}
+          </FormLabel>
           <FormControl>
             <div className="relative flex items-center">
               <input
