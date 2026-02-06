@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { ReactNode, startTransition, useEffect, useState } from "react";
+import { ReactNode, startTransition, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Control, UseFormSetValue, useWatch, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,19 +68,75 @@ const RecruitmentInfoForm = ({
 }: RecruitmentInfoFormProps) => {
   const companyName = useWatch({ control, name: "companyName" });
   const jobTitle = useWatch({ control, name: "jobTitle" });
+  const companyNameRef = useRef<HTMLTextAreaElement | null>(null);
+  const jobTitleRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const resizeInlineTextarea = (element: HTMLTextAreaElement | null) => {
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    resizeInlineTextarea(companyNameRef.current);
+  }, [companyName]);
+
+  useEffect(() => {
+    resizeInlineTextarea(jobTitleRef.current);
+  }, [jobTitle]);
+  const getInlineWidth = (value: string, placeholder: string, min = 4) =>
+    `${Math.max(value.length, placeholder.length, min)}em`;
+
+  const handleInlineChange =
+    (name: "companyName" | "jobTitle") =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setValue(name, event.target.value, { shouldDirty: true });
+    };
+
+  const handleInlineBlur =
+    (name: "companyName" | "jobTitle") =>
+    (event: React.FocusEvent<HTMLInputElement>) => {
+      setValue(name, event.target.value.trim(), { shouldDirty: true });
+    };
 
   return (
     <div className="flex flex-col gap-6">
       {isEdit ? (
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-4">
-            <span className="text-[28px] font-semibold text-[#343e4c]">
-              {companyName || "기업명"}
-            </span>
+            <textarea
+              aria-label="기업명"
+              value={companyName}
+              placeholder="기업명"
+              disabled={disabled}
+              onChange={handleInlineChange("companyName")}
+              onBlur={handleInlineBlur("companyName")}
+              onInput={(event) => resizeInlineTextarea(event.currentTarget)}
+              ref={companyNameRef}
+              rows={1}
+              className={cn(
+                "bg-transparent border-none p-0 m-0 text-[28px] font-semibold text-[#343e4c] outline-none focus:outline-none focus:ring-0 placeholder:text-[#BDBDBD] resize-none overflow-hidden leading-[1.2]",
+                disabled ? "cursor-default" : "cursor-text"
+              )}
+              style={{ width: getInlineWidth(companyName, "기업명", 6), maxWidth: "360px" }}
+            />
             <div className="w-[2px] h-4 bg-[#eee]" />
-            <span className="text-[28px] font-normal text-[#343e4c]">
-              {jobTitle || "직무명"}
-            </span>
+            <textarea
+              aria-label="직무명"
+              value={jobTitle}
+              placeholder="직무명"
+              disabled={disabled}
+              onChange={handleInlineChange("jobTitle")}
+              onBlur={handleInlineBlur("jobTitle")}
+              onInput={(event) => resizeInlineTextarea(event.currentTarget)}
+              ref={jobTitleRef}
+              rows={1}
+              className={cn(
+                "bg-transparent border-none p-0 m-0 text-[28px] font-normal text-[#343e4c] outline-none focus:outline-none focus:ring-0 placeholder:text-[#BDBDBD] resize-none overflow-hidden leading-[1.2]",
+                disabled ? "cursor-default" : "cursor-text"
+              )}
+              style={{ width: getInlineWidth(jobTitle, "직무명", 6), maxWidth: "360px" }}
+            />
           </div>
         </div>
       ) : (
